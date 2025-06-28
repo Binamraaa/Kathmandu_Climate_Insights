@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+eggs/
+*.egg-info
+.installed.cfg
+*.egg
+
+# Jupyter Notebooks
+.ipynb_checkpoints/ # Jupyter's auto-save checkpoints
+
+# Data files (keep raw, but ignore very large processed ones or temporary dumps)
+data/processed/*.csv
+data/processed/*.parquet
+data/temp/
+
+# Model files
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.pth
+models/checkpoints/
+
+# IDE related (VS Code example)
+.vscode/
+.idea/ # PyCharm/IntelliJ
+
+# Operating System files
+.DS_Store # macOS
+Thumbs.db # Windows
+
+# Log files
+*.log
+logs/
