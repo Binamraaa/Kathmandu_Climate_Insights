@@ -27,6 +27,7 @@ The primary objective is to apply ML practices to build an accurate and reliable
 #### 1. Data Ingestion & Cleaning
 *   **Source:** 25+ years of historical daily temperature and precipitation data for Kathmandu.
 *   **Process:** Handled multi-line headers, consolidated twice-daily readings into single daily records, and performed data type conversions. Isolated missing values were handled using interpolation for temperature and fill-with-zero for precipitation.
+*   **Data Source:** The climate data used in this project was provided by the Department of Hydrology and Meteorology (DHM), Government of Nepal.
 
 #### 2. Exploratory Data Analysis (EDA)
 EDA was critical for understanding the underlying patterns in the data.
