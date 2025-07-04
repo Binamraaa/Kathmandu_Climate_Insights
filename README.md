@@ -31,13 +31,21 @@ The primary objective is to apply ML practices to build an accurate and reliable
 #### 2. Exploratory Data Analysis (EDA)
 EDA was critical for understanding the underlying patterns in the data.
 
-| Daily max/min temperature profile (1999-2024) | 7-day rolling sum of Precipitation (1999-2024) |
-| :------------------------------: | :--------------------: |
-| ![Daily Temp](images/temperature.png) | ![Distributions](images/precipitation.png) |
+| Daily max/min temperature profile (1999-2024) | 
+| :--------------------: |
+| ![Daily Temp](images/temperature.png) | 
 
-| Average Monthly Temperature Cycle | Data Distributions |
-| :------------------------------: | :--------------------: |
-| ![Monthly Avg Temp](images/average_monthly_temp.png) | ![Distributions](images/distribution.png) |
+7-day rolling sum of Precipitation (1999-2024) |
+| :------------------------------: |
+|![Distributions](images/precipitation.png) |
+
+| Average Monthly Temperature Cycle |
+| :--------------------: |
+| ![Monthly Avg Temp](images/average_monthly_temp.png) | 
+
+ Data Distributions |
+| :------------------------------: |
+|![Distributions](images/distribution.png) |
 
 *   **Key Insight 1:** The thermal cycle clearly defines the seasons, with the coldest months in Jan/Dec and the warmest from June-August.
 *   **Key Insight 2:** The bimodal distribution of Minimum Temperature reveals two distinct thermal regimes: a cold, dry winter and a warm, humid monsoon season.
@@ -71,9 +79,17 @@ While the metrics are strong, visual inspection provides deeper insights into th
 
 #### Actual vs. Predicted Performance by Horizon
 
-| 1-Day Ahead Forecast | 3-Day Ahead Forecast | 5-Day Ahead Forecast |
-| :---: | :---: | :---: |
-| ![t+1 Plot](images/day1_actualvspredicted.PNG) | ![t+3 Plot](images/day3_actualvspred.PNG) | ![t+5 Plot](images/Actual%20vs%20Predicted%20Max%20and%20Min%20temp.png) |
+| 1-Day Ahead Forecast | 
+| :---: |
+| ![t+1 Plot](images/day1_actualvspredicted.PNG) | 
+
+| 3-Day Ahead Forecast |
+| :---: |
+|![t+3 Plot](images/day3_actualvspred.PNG) | 
+
+| 5-Day Ahead Forecast |
+| :---: |
+|![t+5 Plot](images/Actual%20vs%20Predicted%20Max%20and%20Min%20temp.png) |
 
 As the forecast horizon increases, the model's predictions become noticeably smoother. It successfully captures the overall seasonal curve but increasingly fails to predict the amplitude of daily weather events.
 
