@@ -6,7 +6,7 @@ This repository documents the end-to-end development of a machine learning model
 
 ### Key Visual: Actual vs. Predicted 5-Day Ahead Forecast (2020)
 
-![Actual vs Predicted Plot t+5](images/actual_vs_predicted_t5.png)
+![Actual vs Predicted Plot t+5](/images/Actual%20vs%20Predicted%20Max%20and%20Min%20temp.png)
 *This plot visualizes the core challenge: while the model captures the overall seasonal trend (climatology), it struggles to predict the sharp, day-to-day fluctuations (weather).*
 
 ---
@@ -61,7 +61,7 @@ The tuned XGBoost model consistently outperforms the baseline, with the performa
 
 While the metrics show a solid performance, a deep dive into the prediction errors revealed a clear, systematic pattern.
 
-![Residuals Plot t+5](images/residuals_t5.png)
+![Residuals Plot t+5](/images/residuals_5day.PNG)
 
 1.  **The Smoothing Effect:** The model is excellent at predicting the long-term seasonal average but struggles to capture the magnitude of short-term weather volatility. It consistently **underestimates peak high temperatures** and **overestimates extreme low temperatures**.
 
