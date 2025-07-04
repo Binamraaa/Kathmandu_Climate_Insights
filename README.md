@@ -1,8 +1,8 @@
 # Kathmandu Climate Insights: A Multi-Horizon Temperature Forecasting Project
 
-This repository documents the end-to-end development of a machine learning model to forecast daily maximum and minimum temperatures for Kathmandu, Nepal, across a 1- to 5-day horizon. The project emphasizes a rigorous, iterative MLOps workflow from data ingestion to error analysis.
+This repository documents the end-to-end development of a machine learning model to forecast daily maximum and minimum temperatures for Kathmandu, Nepal, across a 1- to 5-day horizon.
 
-**Project Status (as of July 2025):** Phase 1 Complete. A robust baseline model has been established and analyzed. Phase 2 (integration of external climate variables) is underway.
+**Project Status (as of July 2025):** Phase 1 Complete. A baseline model has been established and analyzed. Phase 2 (integration of external climate variables) is underway.
 
 ---
 
@@ -35,20 +35,72 @@ EDA was critical for understanding the underlying patterns in the data.
 | :--------------------: |
 | ![Daily Temp](images/temperature.png) | 
 
+##### Daily Max and Min Air Temperature in Kathmandu (1999-2024)
+This time-series plot reveals Kathmandu's daily temperature dynamics over 25 years.
+- Dominant Annual Seasonality: 
+Displays a very strong and consistent yearly cycle for both maximum (blue line) and minimum (orange dashed line) temperatures, reflecting clear summer and winter periods.
+- Consistent Daily Fluctuation: 
+The distinct gap between the maximum and minimum temperature lines throughout the year illustrates the daily diurnal range, showing how temperature fluctuates within a single 24-hour period.
+- Inter-annual Variability: 
+While the overall seasonal pattern is stable, there's noticeable year-to-year variability in the amplitude of temperature swings and specific daily values, indicating natural weather variations.
+- Long-term Trend (Visual): 
+Visually, a prominent, consistent linear warming or cooling trend is not immediately evident across the entire period, suggesting a relatively stable overall climate pattern within this dataset's timeframe. However, fluctuations exist year to year.
+###### Observed Extremes:
+- Winter Cold: 
+Minimum temperatures frequently drop close to 0°C during the coldest winter months (typically Dec-Feb).
+- Summer Heat: 
+Maximum temperatures consistently reach into the low 30s °C during the warmest summer months (typically Jun-Aug).
+
 7-day rolling sum of Precipitation (1999-2024) |
 | :------------------------------: |
 |![Distributions](images/precipitation.png) |
+
+##### 7-Day Rolling Sum of Accumulated Precipitation in Kathmandu (1999-2024)
+- Dominant Monsoon Seasonality: Shows a very strong and consistent annual cycle characterized by distinct wet and dry periods. The monsoon season is clearly visible with significant precipitation, primarily occurring from approximately June to September.
+- Pronounced Dry Season: Outside the monsoon, precipitation is consistently low or non-existent, indicating a prolonged dry season, particularly from October through May.
+- Variable Monsoon Intensity: The height and duration of the blue peaks vary considerably year-to-year. Some years exhibit higher and more sustained rainfall (e.g., 2000, 2002, 2010, 2020, 2024 (partial)), while others appear to have comparatively drier monsoons or shorter intense periods (e.g., 2004, 2007, 2008, 2014, 2017).
+- Extreme Events: The sharp, tall spikes within the monsoon periods represent significant, concentrated rainfall events. These visually indicate instances of heavy downpours or extended wet spells, which are crucial for flood risk assessment and water resource management.
+- No Obvious Long-Term Trend: Across the 25-year span, there isn't an immediately apparent linear increase or decrease in overall monsoon intensity or duration, though inter-annual variability is high.
 
 | Average Monthly Temperature Cycle |
 | :--------------------: |
 | ![Monthly Avg Temp](images/average_monthly_temp.png) | 
 
+##### Average Monthly Max/Min Temperature in Kathmandu (1999-2024)
+This plot clearly illustrates Kathmandu's distinct annual temperature cycle, reflecting its subtropical highland climate.
+- Prominent Annual Cycle: 
+Temperatures follow a strong, predictable seasonal pattern, reflecting the Northern Hemisphere's winter and summer.
+- Coldest Period: 
+January and February are the coldest months (Min Avg: ~3-5°C; Max Avg: ~18-21°C), aligning with the peak winter season.
+- Warmest Period: 
+Temperatures steadily rise from March, peaking in June-July (Max Avg: ~29-30°C; Min Avg: ~20°C), corresponding to the pre-monsoon and early monsoon warmth.
+###### Diurnal Temperature Range (DTR) - Seasonal Variation:
+- Wider DTR (Dry Season - Oct-May): 
+The larger gap between Max and Min temperatures, particularly prominent in spring (Mar-Apr) and post-monsoon (Oct-Nov), indicates clearer skies and lower humidity. This allows for greater radiative cooling at night (cooler lows) and more intense solar heating during the day (warmer highs).
+- Narrower DTR (Monsoon Season - Jun-Sep): 
+The compressed temperature range during these months is a hallmark of monsoon influence. Increased cloud cover and high humidity dampen both daytime heating and nighttime cooling, resulting in consistently warmer nights and relatively subdued daytime highs.
+- Climate Alignment: 
+These observations are characteristic of a monsoon climate, where atmospheric moisture and cloud cover significantly regulate diurnal temperature swings.
+
  Data Distributions |
 | :------------------------------: |
 |![Distributions](images/distribution.png) |
 
-*   **Key Insight 1:** The thermal cycle clearly defines the seasons, with the coldest months in Jan/Dec and the warmest from June-August.
-*   **Key Insight 2:** The bimodal distribution of Minimum Temperature reveals two distinct thermal regimes: a cold, dry winter and a warm, humid monsoon season.
+##### Distribution of Max Temperature, Min Temperature, and Non-Zero Precipitation
+These histograms, with their Kernel Density Estimates (KDEs), reveal the frequency and spread of temperature and precipitation values in Kathmandu.
+###### Distribution of Max Temperature:
+- The distribution is largely unimodal (single peak) and somewhat bell-shaped, centered around 28-30°C.
+- This indicates that maximum temperatures in Kathmandu most frequently fall within a comfortable warm range, representing the prevalent conditions during most of the year outside of peak winter.
+###### Distribution of Min Temperature:
+- This plot reveals a bimodal (two-peak) distribution, which is highly insightful.
+- One distinct peak occurs around 3-5°C, representing the cold minimum temperatures experienced during the winter months.
+- A broader, less defined peak or plateau is visible around 18-20°C, reflecting the warmer minimum temperatures during the monsoon and post-monsoon seasons.
+- This bimodality strongly indicates two distinct thermal regimes for nighttime temperatures in Kathmandu, primarily driven by seasonal atmospheric conditions (clear winter nights allowing strong radiative cooling vs. humid, cloudy monsoon nights trapping heat).
+###### Distribution of Non-Zero Precipitation:
+- The distribution is highly right-skewed (positively skewed), with a large concentration of data points near 0 mm.
+- This confirms that while precipitation events are frequent, the vast majority are small in magnitude (e.g., 0-25 mm).
+- The long tail extending to higher values indicates that very heavy rainfall events (e.g., >100 mm) occur but are comparatively rare, yet crucial for flood assessment.
+- This extreme skewness implies that standard statistical models might benefit from data transformations (like a log transform) when working with precipitation, to better approximate a normal distribution.
 
 #### 3. Feature Engineering
 A rich feature set was created to capture the temporal dynamics of the data:
