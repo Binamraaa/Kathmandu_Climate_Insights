@@ -110,10 +110,10 @@ The final classifier was optimized for a balance between precision and recall, r
 **Final Classification Report:**
 | Class | Precision | Recall | F1-Score | Accuracy
 | :--- | :---: | :---: | :---: | :---: |
-| Normal Day | 0.71 | 0.98 | 0.82 |   |
-| **High-Error Day**| **0.43** | **0.04** | 0.07 | 0.69 |
+| Normal Day | 0.71 | 0.98 | 0.80 |   |
+| **High-Error Day**| **0.43** | **0.20** | 0.27 | 0.69 |
 
-**Conclusion:** The Confidence Model was tuned to be highly "cautious" and reliable. While it identifies a smaller subset of high-error days (4% recall), the warnings it provides are highly precise (**43% precision**). This means that when the model *does* raise a red flag, it is a very trustworthy signal of atmospheric instability, providing a significant "edge" over the 25% baseline chance.
+**Conclusion:** The Confidence Model was tuned to be highly "cautious" and reliable. While it identifies a smaller subset of high-error days (20% recall), the warnings it provides are somewhat precise (**43% precision**). This means that when the model *does* raise a red flag, it is a very trustworthy signal of atmospheric instability, providing a significant "edge" over the 25% baseline chance.
 
 ---
 
