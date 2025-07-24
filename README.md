@@ -1,181 +1,158 @@
-# Kathmandu Climate Insights: A Multi-Horizon Temperature Forecasting Project
+# Kathmandu Climate Insights: A Two-Part Forecasting System
 
-This repository documents the end-to-end development of a machine learning model to forecast daily maximum and minimum temperatures for Kathmandu, Nepal, across a 1- to 5-day horizon.
+**Project Status (July 2025):** Complete. This project has successfully developed and validated a two-part forecasting system, consisting of a high-performance temperature forecasting engine and an intelligent "Forecast Confidence" model.
 
-**Project Status (as of July 2025):** Phase 1 Complete. A baseline model has been established and analyzed. Phase 2 (integration of external climate variables) is underway.
-
----
-
-### Project Goal
-
-The primary objective is to apply ML practices to build an accurate and reliable multi-horizon temperature forecasting model. This project serves as a practical demonstration of time-series analysis, feature engineering, and model evaluation techniques in a real-world climate science context.
+This repository documents the end-to-end journey of building a sophisticated machine learning system to forecast daily temperatures in Kathmandu. The project's narrative is one of iterative development, deep-dive diagnostics, and strategic pivoting in response to complex, real-world data challenges. What began as a standard forecasting task evolved into a deep exploration of data non-stationarity, overfitting, and advanced feature engineering, culminating in a hybrid, two-model solution designed for real-world reliability.
 
 ---
 
-### Key Findings & TL;DR
-
-*   **Successful Baseline:** A tuned XGBoost model was successfully built, outperforming a Linear Regression baseline on 8 out of 10 forecasting tasks.
-*   **Performance vs. Horizon:** The model's advantage is most significant on longer horizons (`t+3` to `t+5`), where it better captures non-linear trends. For the `t+5` forecast, it reduced the Mean Absolute Error (MAE) by **0.10°C** compared to the baseline.
-*   **Insight from Error Analysis:** Visual analysis revealed the model excels at predicting long-term seasonal trends (**climatology**) but struggles with sharp, day-to-day volatility (**weather**). This is the key limitation to address.
-*   **Data-Driven Next Steps:** The error analysis points directly to the need for more descriptive features. The next phase will focus on integrating **Relative Humidity (RH)** and **Wind Speed/Direction** data to better model the drivers of abrupt weather changes.
-
-
----
-
-### Methodology & Workflow
-
-#### 1. Data Ingestion & Cleaning
-*   **Source:** 25+ years of historical daily temperature and precipitation data for Kathmandu.
-*   **Process:** Handled multi-line headers, consolidated twice-daily readings into single daily records, and performed data type conversions. Isolated missing values were handled using interpolation for temperature and fill-with-zero for precipitation.
-*   **Data Source:** The climate data used in this project was provided by the Department of Hydrology and Meteorology (DHM), Government of Nepal.
-
-#### 2. Exploratory Data Analysis (EDA)
-EDA was critical for understanding the underlying patterns in the data.
-
-| Daily max/min temperature profile (1999-2024) | 
-| :--------------------: |
-| ![Daily Temp](images/temperature.png) | 
-
-##### Daily Max and Min Air Temperature in Kathmandu (1999-2024)
-This time-series plot reveals Kathmandu's daily temperature dynamics over 25 years.
-- Dominant Annual Seasonality: 
-Displays a very strong and consistent yearly cycle for both maximum (blue line) and minimum (orange dashed line) temperatures, reflecting clear summer and winter periods.
-- Consistent Daily Fluctuation: 
-The distinct gap between the maximum and minimum temperature lines throughout the year illustrates the daily diurnal range, showing how temperature fluctuates within a single 24-hour period.
-- Inter-annual Variability: 
-While the overall seasonal pattern is stable, there's noticeable year-to-year variability in the amplitude of temperature swings and specific daily values, indicating natural weather variations.
-- Long-term Trend (Visual): 
-Visually, a prominent, consistent linear warming or cooling trend is not immediately evident across the entire period, suggesting a relatively stable overall climate pattern within this dataset's timeframe. However, fluctuations exist year to year.
-###### Observed Extremes:
-- Winter Cold: 
-Minimum temperatures frequently drop close to 0°C during the coldest winter months (typically Dec-Feb).
-- Summer Heat: 
-Maximum temperatures consistently reach into the low 30s °C during the warmest summer months (typically Jun-Aug).
-
-7-day rolling sum of Precipitation (1999-2024) |
-| :------------------------------: |
-|![Distributions](images/precipitation.png) |
-
-##### 7-Day Rolling Sum of Accumulated Precipitation in Kathmandu (1999-2024)
-- Dominant Monsoon Seasonality: Shows a very strong and consistent annual cycle characterized by distinct wet and dry periods. The monsoon season is clearly visible with significant precipitation, primarily occurring from approximately June to September.
-- Pronounced Dry Season: Outside the monsoon, precipitation is consistently low or non-existent, indicating a prolonged dry season, particularly from October through May.
-- Variable Monsoon Intensity: The height and duration of the blue peaks vary considerably year-to-year. Some years exhibit higher and more sustained rainfall (e.g., 2000, 2002, 2010, 2020, 2024 (partial)), while others appear to have comparatively drier monsoons or shorter intense periods (e.g., 2004, 2007, 2008, 2014, 2017).
-- Extreme Events: The sharp, tall spikes within the monsoon periods represent significant, concentrated rainfall events. These visually indicate instances of heavy downpours or extended wet spells, which are crucial for flood risk assessment and water resource management.
-- No Obvious Long-Term Trend: Across the 25-year span, there isn't an immediately apparent linear increase or decrease in overall monsoon intensity or duration, though inter-annual variability is high.
-
-| Average Monthly Temperature Cycle |
-| :--------------------: |
-| ![Monthly Avg Temp](images/average_monthly_temp.png) | 
-
-##### Average Monthly Max/Min Temperature in Kathmandu (1999-2024)
-This plot clearly illustrates Kathmandu's distinct annual temperature cycle, reflecting its subtropical highland climate.
-- Prominent Annual Cycle: 
-Temperatures follow a strong, predictable seasonal pattern, reflecting the Northern Hemisphere's winter and summer.
-- Coldest Period: 
-January and February are the coldest months (Min Avg: ~3-5°C; Max Avg: ~18-21°C), aligning with the peak winter season.
-- Warmest Period: 
-Temperatures steadily rise from March, peaking in June-July (Max Avg: ~29-30°C; Min Avg: ~20°C), corresponding to the pre-monsoon and early monsoon warmth.
-###### Diurnal Temperature Range (DTR) - Seasonal Variation:
-- Wider DTR (Dry Season - Oct-May): 
-The larger gap between Max and Min temperatures, particularly prominent in spring (Mar-Apr) and post-monsoon (Oct-Nov), indicates clearer skies and lower humidity. This allows for greater radiative cooling at night (cooler lows) and more intense solar heating during the day (warmer highs).
-- Narrower DTR (Monsoon Season - Jun-Sep): 
-The compressed temperature range during these months is a hallmark of monsoon influence. Increased cloud cover and high humidity dampen both daytime heating and nighttime cooling, resulting in consistently warmer nights and relatively subdued daytime highs.
-- Climate Alignment: 
-These observations are characteristic of a monsoon climate, where atmospheric moisture and cloud cover significantly regulate diurnal temperature swings.
-
- Data Distributions |
-| :------------------------------: |
-|![Distributions](images/distribution.png) |
-
-##### Distribution of Max Temperature, Min Temperature, and Non-Zero Precipitation
-These histograms, with their Kernel Density Estimates (KDEs), reveal the frequency and spread of temperature and precipitation values in Kathmandu.
-###### Distribution of Max Temperature:
-- The distribution is largely unimodal (single peak) and somewhat bell-shaped, centered around 28-30°C.
-- This indicates that maximum temperatures in Kathmandu most frequently fall within a comfortable warm range, representing the prevalent conditions during most of the year outside of peak winter.
-###### Distribution of Min Temperature:
-- This plot reveals a bimodal (two-peak) distribution, which is highly insightful.
-- One distinct peak occurs around 3-5°C, representing the cold minimum temperatures experienced during the winter months.
-- A broader, less defined peak or plateau is visible around 18-20°C, reflecting the warmer minimum temperatures during the monsoon and post-monsoon seasons.
-- This bimodality strongly indicates two distinct thermal regimes for nighttime temperatures in Kathmandu, primarily driven by seasonal atmospheric conditions (clear winter nights allowing strong radiative cooling vs. humid, cloudy monsoon nights trapping heat).
-###### Distribution of Non-Zero Precipitation:
-- The distribution is highly right-skewed (positively skewed), with a large concentration of data points near 0 mm.
-- This confirms that while precipitation events are frequent, the vast majority are small in magnitude (e.g., 0-25 mm).
-- The long tail extending to higher values indicates that very heavy rainfall events (e.g., >100 mm) occur but are comparatively rare, yet crucial for flood assessment.
-- This extreme skewness implies that standard statistical models might benefit from data transformations (like a log transform) when working with precipitation, to better approximate a normal distribution.
-
-#### 3. Feature Engineering
-A rich feature set was created to capture the temporal dynamics of the data:
-*   **Cyclical Time Features:** `Month_sin/cos`, `Day_of_Year_sin/cos`.
-*   **Lagged Features:** Past values of temperature and precipitation (`lag_1, lag_2, lag_3, lag_7`).
-*   **Rolling Window Features:** 7-day and 30-day rolling `mean` and `std` for temperature and `sum` for precipitation.
-*   **Derived Features:** `Daily_Temp_Range`.
-
-#### 4. Modeling & Evaluation
-A **Linear Regression** model was established as a robust baseline. An **XGBoost** model was then implemented and tuned using `RandomizedSearchCV` with time-series-aware cross-validation.
-
-**Results on Test Set (MAE in °C):**
-
-| Horizon | Temp. | Baseline (LR) | Tuned (XGBoost) | **Improvement** |
-|:-------:|:-----:|:---------------:|:-----------------:|:-----------------:|
-| **t+1** | Max | 1.35 °C | 1.35 °C | 0.00 °C |
-| | Min | 0.96 °C | 0.95 °C | **+0.01 °C** |
-| **t+3** | Max | 1.65 °C | 1.58 °C | **+0.07 °C** |
-| | Min | 1.13 °C | 1.11 °C | **+0.02 °C** |
-| **t+5** | Max | 1.74 °C | 1.64 °C | **+0.10 °C** |
-| | Min | 1.20 °C | 1.17 °C | **+0.03 °C** |
+### Table of Contents
+1.  [The Problem Statement & Scope](#the-problem-statement--scope)
+2.  [Final System Architecture](#final-system-architecture)
+3.  [The Project Journey: A Four-Phase Investigation](#the-project-journey-a-four-phase-investigation)
+    *   [Phase 1: Establishing the Champion Forecaster](#phase-1-establishing-the-champion-forecaster)
+    *   [Phase 2: The Challenge of Incomplete Data](#phase-2-the-challenge-of-incomplete-data)
+    *   [Phase 3: Diagnosing Failed Improvements](#phase-3-diagnosing-failed-improvements-with-new-data)
+    *   [Phase 4: The Strategic Pivot to a "Confidence Model"](#phase-4-the-strategic-pivot-to-a-confidence-model)
+4.  [Final Model Performance](#final-model-performance)
+    *   [Forecasting Engine Performance](#forecasting-engine-performance)
+    *   [Confidence Engine Performance](#confidence-engine-performance)
+5.  [Application & Deployment Blueprint](#application--deployment-blueprint)
+6.  [Future Work: Deep Learning](#future-work-deep-learning)
+7.  [Technologies & Libraries](#technologies--libraries)
+8.  [Acknowledgements](#acknowledgements)
 
 ---
 
-### Deep Dive: Error Analysis & Model Limitations
+### The Problem Statement & Scope
 
-While the metrics are strong, visual inspection provides deeper insights into the model's behavior.
+The primary objective was to develop a reliable system for forecasting daily maximum and minimum temperatures for Kathmandu, Nepal. An initial analysis of a 5-day forecast horizon revealed a significant drop in performance beyond 72 hours. To maximize practical value and reliability for operational use cases, the project scope was strategically refined to a **1- to 3-day operational forecast horizon.**
 
-#### Actual vs. Predicted Performance by Horizon
-
-| 1-Day Ahead Forecast | 
-| :---: |
-| ![t+1 Plot](images/day1_actualvspredicted.PNG) | 
-
-| 3-Day Ahead Forecast |
-| :---: |
-|![t+3 Plot](images/day3_actualvspred.PNG) | 
-
-| 5-Day Ahead Forecast |
-| :---: |
-|![t+5 Plot](images/Actual%20vs%20Predicted%20Max%20and%20Min%20temp.png) |
-
-As the forecast horizon increases, the model's predictions become noticeably smoother. It successfully captures the overall seasonal curve but increasingly fails to predict the amplitude of daily weather events.
-
-#### Analysis of Residuals (Actual - Predicted)
-
-![Residuals Plot t+5](images/residuals_5day.PNG)
-
-This plot of the 5-day ahead prediction errors confirms several key limitations:
-1.  **Heteroscedasticity:** The errors are not random. Their variance is much higher during the volatile pre-monsoon and monsoon seasons (center of the plot), indicating the model is less certain during chaotic weather.
-2.  **Systematic Bias:** The model consistently **under-predicts** peak hot days (points > 0) and **over-predicts** sharp cold snaps or cool, rainy days (points < 0).
-
-**Conclusion:** The current feature set, while powerful, is "blind" to the external drivers of abrupt weather changes, forcing the model to be overly conservative.
+![Min and Max Temperature](/images/temperature.png)
+*Minimum and Maximum Temperature for Kathmandu from 1999-2024*
 
 ---
 
-### Future Work & Next Steps
-The insights from the error analysis provide a clear, data-driven path for Phase 2:
+### Final System Architecture
 
-1.  **Integrate External Variables:** The top priority is to merge new datasets for **Relative Humidity (RH)** and **Wind Speed/Direction**. These variables are direct drivers of temperature change and are expected to significantly improve the model's ability to predict volatility.
-2.  **Advanced Feature Engineering:** Create new features based on this new data, including lagged RH values and cyclical wind direction components (`Wind_Dir_sin`, `Wind_Dir_cos`).
-3.  **Re-evaluate Models:** Re-train and re-evaluate the entire modeling pipeline with this enriched feature set to quantify the performance gain.
+The project concluded with a two-part system designed to provide both accurate forecasts and a crucial assessment of their reliability.
+
+**System Workflow:**
+
+> 1.  **Input:** The latest atmospheric data (RH, Wind, Solar, etc.) for the current day is provided to the system.
+> 2.  **Parallel Processing:**
+>     *   The **Forecasting Engine** (`Champion Model`) uses a feature set based on long-term history to generate the core temperature forecast.
+>     *   The **Confidence Engine** (`Co-Pilot Model`) uses a feature set based on advanced physics and intra-day dynamics to assess the stability of the atmosphere.
+> 3.  **Output Synthesis:** The system combines the outputs to provide a final, context-rich forecast to the user.
+>     *   *Example Output:* `"T+1 Max Temp: 29°C (Confidence: HIGH)"` or `"T+1 Max Temp: 31°C (Confidence: LOW - conditions are unstable)"`
+
+This hybrid approach leverages the unique strengths of two specialized models to deliver a more valuable and reliable product than a single model could achieve.
 
 ---
 
-### Technologies Used
+### The Project Journey: A Four-Phase Investigation
+
+The final architecture was the result of a rigorous, multi-stage investigation where "failed" experiments provided the most critical insights.
+
+#### Phase 1: Establishing the Champion Forecaster
+The project began by focusing on the 25-year historical dataset (`df_analysis.csv`) to create the strongest possible baseline forecaster.
+
+*   **Experiment - XGBoost vs. Random Forest:** A head-to-head competition was conducted. Both models were optimized using `RandomizedSearchCV` with a `TimeSeriesSplit` for robust, time-aware cross-validation.
+*   **Outcome:** The XGBoost model proved definitively superior. This model was saved as **`champion_model_phase1.joblib`**.
+
+![Actual vs Predicted](images/day1_actualvspredicted.PNG)
+*Actual vs. Predicted plot for the final Champion Model, showing its strong ability to capture seasonal trends.*
+
+#### Phase 2: The Challenge of Incomplete Data
+The project's trajectory was defined by the attempt to integrate new, high-resolution atmospheric data (Relative Humidity, Wind Speed/Direction, and Solar Radiation). A critical challenge emerged immediately: **the new, high-quality data was only available from late 2020 onwards**, while our core dataset stretched back to 1999. This "Data Gap" made a simple merge impossible and dictated the course of all future experiments.
+
+#### Phase 3: Diagnosing Failed Improvements with New Data
+The core of this project involved investigating why intuitive attempts to improve the Champion model were unsuccessful.
+
+1.  **The `df_historical` Experiment (The Non-Stationarity Problem):**
+    *   **Attempt:** To improve the Champion by integrating a 25-year Relative Humidity (RH) dataset.
+    *   **Result:** The model's performance became significantly *worse* (t+1 Max Temp MAE worsened from 1.34°C to **1.64°C**).
+    *   **Diagnosis:** This uncovered a critical **"Data Non-Stationarity"** issue. We concluded that the relationship between variables had changed over the 25-year period, making a single, unified model on this dataset unreliable.
+
+2.  **The `Hybrid Physics Model` Experiment (The Overfitting Problem):**
+    *   **Attempt:** To build a new, standalone forecaster on the recent, data-rich dataset (2020-2024), powered by sophisticated physics-informed features.
+    *   **Result:** These models failed to beat the Champion, with the best attempt yielding a t+1 Max Temp MAE of **1.54°C**.
+    *   **Diagnosis:** A classic case of **severe overfitting**. The models were too complex for the short 4-year time frame; they had deep physics knowledge but lacked the long-term "experience" of the Champion and were "memorizing" noise.
+
+#### Phase 4: The Strategic Pivot to a "Confidence Model"
+These critical findings led to the final, successful strategy. If the recent data couldn't improve the forecast's *accuracy*, perhaps it could predict its *reliability*. The project was repurposed to build a classifier to predict when the Champion's forecast is likely to have a high error. This required a deep dive into advanced feature engineering, including `Dew_Point`, `Intra-Day Solar Dynamics`, and `Dynamic Anomaly` features, as well as a careful, cross-validated tuning process to balance the Precision-Recall trade-off.
+
+---
+
+### Final Model Performance
+
+This two-track strategy yielded two successful, specialized models.
+
+#### Forecasting Engine (`Champion Model`) Performance
+This model remains the most accurate direct forecaster, outperforming all other experimental regression models.
+
+**Full Performance Metrics Table (t+1 Horizon, MAE):**
+| Model | Max Temp MAE | Min Temp MAE | Notes |
+| :--- | :---: | :---: | :--- |
+| Linear Regression | 1.35°C | 0.96°C | The initial baseline. |
+| Tuned Random Forest | 1.40°C | 0.96°C | Outperformed by XGBoost. |
+| XGBoost on `df_historical` | 1.64°C | 1.39°C | Degraded performance due to non-stationarity. |
+| Physics-Aware Model (`df_recent`) | 1.54°C | 0.92°C | Strong `Min Temp` but poor `Max Temp` due to overfitting. |
+| **XGBoost Champion (Final)** | **1.34°C** | **0.94°C** | **The winning forecaster.** |
+
+#### Confidence Engine (`Final Tuned Classifier`) Performance
+The final classifier was optimized for a balance between precision and recall, resulting in a system that provides a reliable warning for potentially inaccurate forecasts.
+
+| ![Confusion Matrix](images/confidence_confusion_matrix.png) | ![Feature Importance](images/confidence_feature_importance.png) |
+| :---: | :---: |
+| *Confusion Matrix for the Final Confidence Model* | *Top Features Driving Forecast Unpredictability* |
+
+**Final Classification Report:**
+| Class | Precision | Recall | F1-Score | Accuracy
+| :--- | :---: | :---: | :---: | :---: |
+| Normal Day | 0.71 | 0.98 | 0.82 |   |
+| **High-Error Day**| **0.43** | **0.04** | 0.07 | 0.69 |
+
+**Conclusion:** The Confidence Model was tuned to be highly "cautious" and reliable. While it identifies a smaller subset of high-error days (4% recall), the warnings it provides are highly precise (**43% precision**). This means that when the model *does* raise a red flag, it is a very trustworthy signal of atmospheric instability, providing a significant "edge" over the 25% baseline chance.
+
+---
+
+### Application & Deployment Blueprint
+
+This two-part system is designed to be deployed as a simple API that could power an interactive web application or be used for research.
+
+#### Backend (Python with Flask/FastAPI)
+1.  **API Endpoint:** A single endpoint `POST /predict` would accept a JSON object with the latest day's weather data.
+2.  **Model Loading:** On startup, the server would load both `champion_model_phase1.joblib` and the final `confidence_model.joblib` into memory.
+3.  **Feature Engineering:** A dedicated module would take the input JSON and perform all the necessary feature engineering steps to prepare the data for both models.
+4.  **Prediction Logic:**
+    *   The feature vector for the Champion is passed to the **Forecasting Engine** to get the 3-day temperature predictions.
+    *   The feature vector for the Co-Pilot is passed to the **Confidence Engine** to get the `t+1` confidence score.
+5.  **API Response:** The endpoint returns a clean JSON object:
+    ```json
+    {
+      "forecast_t+1": {
+        "max_temp_c": 29.5,
+        "min_temp_c": 18.2,
+        "confidence": "HIGH" // or "LOW"
+      },
+      "forecast_t+2": { ... },
+      "forecast_t+3": { ... }
+    }
+    ```
+
+---
+
+### Future Work: Deep Learning
+The next phase of this project will explore if **LSTMs (Long Short-Term Memory networks)**, using the rich physics-informed features from the recent data, can build a more sensitive "Confidence Engine" (improving recall) or challenge the Champion forecaster directly.
+
+---
+
+### Technologies & Libraries
 *   **Languages:** Python
-*   **Libraries:** Pandas, NumPy, Scikit-learn, XGBoost, Matplotlib, Seaborn
-
-### How to Run
-1.  Set up the conda environment.
-2.  Install all required libraries.
-3.  Place data in the `/data` directory.
-4.  Run the notebooks in `/notebooks` in numerical order, to make sure all file paths are relative.
+*   **Libraries:** Pandas, NumPy, Scikit-learn, XGBoost, Matplotlib, Seaborn, Joblib
 
 ---
-*Developed by Binamra, July 2025.*
+
+### Acknowledgements
+The historical climate data used in this project was provided by the Department of Hydrology and Meteorology (DHM), Government of Nepal. A huge shoutout to GD Labs and Research for helping acquire the data. 
