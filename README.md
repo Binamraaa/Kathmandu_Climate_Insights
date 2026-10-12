@@ -1,158 +1,162 @@
-# Kathmandu Climate Insights: A Two-Part Forecasting System
+# के लाउने? (K Laune): what to wear in Kathmandu
 
-**Project Status (July 2025):** Complete. This project has successfully developed and validated a two-part forecasting system, consisting of a high-performance temperature forecasting engine and an intelligent "Forecast Confidence" model.
+**Kathmandu's weather forecast, translated into what to wear.** A machine-learning forecast for Kathmandu Airport, corrected for the valley's local climate, drives a small web app that dresses a personal avatar for tomorrow: morning and afternoon outfits, alternatives, and whether to take an umbrella (or a raincoat, if you ride a scooter). English and Nepali.
 
-This repository documents the end-to-end journey of building a sophisticated machine learning system to forecast daily temperatures in Kathmandu. The project's narrative is one of iterative development, deep-dive diagnostics, and strategic pivoting in response to complex, real-world data challenges. What began as a standard forecasting task evolved into a deep exploration of data non-stationarity, overfitting, and advanced feature engineering, culminating in a hybrid, two-model solution designed for real-world reliability.
+**Live app: https://binamraaa.github.io/Kathmandu_Climate_Insights/**
 
----
+[![Daily forecast](https://github.com/Binamraaa/Kathmandu_Climate_Insights/actions/workflows/forecast.yml/badge.svg)](https://github.com/Binamraaa/Kathmandu_Climate_Insights/actions/workflows/forecast.yml)
 
-### Table of Contents
-1.  [The Problem Statement & Scope](#the-problem-statement--scope)
-2.  [Final System Architecture](#final-system-architecture)
-3.  [The Project Journey: A Four-Phase Investigation](#the-project-journey-a-four-phase-investigation)
-    *   [Phase 1: Establishing the Champion Forecaster](#phase-1-establishing-the-champion-forecaster)
-    *   [Phase 2: The Challenge of Incomplete Data](#phase-2-the-challenge-of-incomplete-data)
-    *   [Phase 3: Diagnosing Failed Improvements](#phase-3-diagnosing-failed-improvements-with-new-data)
-    *   [Phase 4: The Strategic Pivot to a "Confidence Model"](#phase-4-the-strategic-pivot-to-a-confidence-model)
-4.  [Final Model Performance](#final-model-performance)
-    *   [Forecasting Engine Performance](#forecasting-engine-performance)
-    *   [Confidence Engine Performance](#confidence-engine-performance)
-5.  [Application & Deployment Blueprint](#application--deployment-blueprint)
-6.  [Future Work: Deep Learning](#future-work-deep-learning)
-7.  [Technologies & Libraries](#technologies--libraries)
-8.  [Acknowledgements](#acknowledgements)
+![Avatar gallery](assets/avatar_gallery.png)
 
 ---
 
-### The Problem Statement & Scope
+## Contents
 
-The primary objective was to develop a reliable system for forecasting daily maximum and minimum temperatures for Kathmandu, Nepal. An initial analysis of a 5-day forecast horizon revealed a significant drop in performance beyond 72 hours. To maximize practical value and reliability for operational use cases, the project scope was strategically refined to a **1- to 3-day operational forecast horizon.**
-
-![Min and Max Temperature](/images/temperature.png)
-*Minimum and Maximum Temperature for Kathmandu from 1999-2024*
-
----
-
-### Final System Architecture
-
-The project concluded with a two-part system designed to provide both accurate forecasts and a crucial assessment of their reliability.
-
-**System Workflow:**
-
-> 1.  **Input:** The latest atmospheric data (RH, Wind, Solar, etc.) for the current day is provided to the system.
-> 2.  **Parallel Processing:**
->     *   The **Forecasting Engine** (`Champion Model`) uses a feature set based on long-term history to generate the core temperature forecast.
->     *   The **Confidence Engine** (`Co-Pilot Model`) uses a feature set based on advanced physics and intra-day dynamics to assess the stability of the atmosphere.
-> 3.  **Output Synthesis:** The system combines the outputs to provide a final, context-rich forecast to the user.
->     *   *Example Output:* `"T+1 Max Temp: 29°C (Confidence: HIGH)"` or `"T+1 Max Temp: 31°C (Confidence: LOW - conditions are unstable)"`
-
-This hybrid approach leverages the unique strengths of two specialized models to deliver a more valuable and reliable product than a single model could achieve.
+1. [What the app does](#what-the-app-does)
+2. [How it works](#how-it-works)
+3. [Results](#results)
+4. [Real-world verification](#real-world-verification)
+5. [Running it yourself](#running-it-yourself)
+6. [Data and credits](#data-and-credits)
+7. [Limitations](#limitations)
+8. [Project history](#project-history)
+9. [Roadmap](#roadmap)
 
 ---
 
-### The Project Journey: A Four-Phase Investigation
+## What the app does
 
-The final architecture was the result of a rigorous, multi-stage investigation where "failed" experiments provided the most critical insights.
+- **Your avatar, your clothes.** A seven-question builder (age group, man / woman / rather not say, skin tone, hair, usual style, walk or scooter, how much the cold bothers you) creates an avatar. Styles cover modern and traditional Kathmandu dress: streetwear, smart casual, dresses, kurta-suruwal and kurta-pyjama, daura-suruwal with dhaka topi, and sari.
+- **Morning and afternoon looks.** Kathmandu's day-night swing is large, so the app shows what to wear at about 8 am and at the afternoon high, e.g. *sweater in the morning, T-shirt by afternoon*.
+- **Options, not orders.** An "Other ideas" row offers three alternatives for the same weather, mostly from your own style plus one crossover. The catalogue includes leather and denim jackets, flannel and linen shirts, kurti with jeans, pashmina, haku patasi, bakhu and gunyu-cholo.
+- **Honest uncertainty.** Tomorrow's high comes with a 10–90% range. When the range straddles a clothing boundary, the advice says "bring a layer" instead of guessing; this is tuned to appear on about a quarter of days.
+- **Scooter mode.** Riders get wind-chill-adjusted advice (about 4 °C colder in the morning), a raincoat instead of an umbrella, and gloves on cold mornings.
+- **Two languages.** English, or Nepali with key words in Devanagari and familiar garment names kept as people say them (बिहान hoodie, दिउँसो T-shirt।).
+- **Light.** One HTML file, no framework, no tracking. Your avatar is stored only in your browser.
 
-#### Phase 1: Establishing the Champion Forecaster
-The project began by focusing on the 25-year historical dataset (`df_analysis.csv`) to create the strongest possible baseline forecaster.
+## How it works
 
-*   **Experiment - XGBoost vs. Random Forest:** A head-to-head competition was conducted. Both models were optimized using `RandomizedSearchCV` with a `TimeSeriesSplit` for robust, time-aware cross-validation.
-*   **Outcome:** The XGBoost model proved definitively superior. This model was saved as **`champion_model_phase1.joblib`**.
+```mermaid
+flowchart LR
+    A[Open-Meteo:<br/>6 global weather models,<br/>tomorrow's forecast] --> C
+    B[Last 45 days of<br/>Kathmandu weather,<br/>bias-corrected to the airport station] --> C
+    C[MOS v2.1<br/>XGBoost quantile models<br/>Max · Min · rain] --> D[docs/forecast.json]
+    B --> E[Champion v2 / Rain v1<br/>days 2–3] --> D
+    D --> F[K Laune app<br/>avatar + outfit rules]
+    D --> G[Verification log]
+```
 
-![Actual vs Predicted](images/day1_actualvspredicted.PNG)
-*Actual vs. Predicted plot for the final Champion Model, showing its strong ability to capture seasonal trends.*
+1. **Every evening at 18:15 Nepal time** a GitHub Action runs `src/export_forecast.py`.
+2. **Tomorrow** comes from **MOS v2.1** (Model Output Statistics): XGBoost models that take forecasts from six global weather models (ECMWF IFS, DWD ICON, NOAA GFS, JMA, CMA and Open-Meteo best match) together with recent station history, and learn how to correct them for Kathmandu. Global models see the valley as a blur of floor and surrounding hills and run 2–3 °C too cold on raw output; MOS learns that correction from the airport record.
+3. **Days 2 and 3** come from the station-only models (Champion v2 for temperature, Rain v1 for rain).
+4. The forecast is committed to `docs/forecast.json`, which GitHub Pages serves to the app, and appended to the verification log.
+5. The app turns temperatures into outfits with simple, readable rules (six warmth tiers × each clothing style), adjusted for the user's cold sensitivity and travel mode.
 
-#### Phase 2: The Challenge of Incomplete Data
-The project's trajectory was defined by the attempt to integrate new, high-resolution atmospheric data (Relative Humidity, Wind Speed/Direction, and Solar Radiation). A critical challenge emerged immediately: **the new, high-quality data was only available from late 2020 onwards**, while our core dataset stretched back to 1999. This "Data Gap" made a simple merge impossible and dictated the course of all future experiments.
+## Results
 
-#### Phase 3: Diagnosing Failed Improvements with New Data
-The core of this project involved investigating why intuitive attempts to improve the Champion model were unsuccessful.
+All scores are out-of-sample. MAE = mean absolute error in °C (lower is better). Brier = error of rain probabilities (lower is better).
 
-1.  **The `df_historical` Experiment (The Non-Stationarity Problem):**
-    *   **Attempt:** To improve the Champion by integrating a 25-year Relative Humidity (RH) dataset.
-    *   **Result:** The model's performance became significantly *worse* (t+1 Max Temp MAE worsened from 1.34°C to **1.64°C**).
-    *   **Diagnosis:** This uncovered a critical **"Data Non-Stationarity"** issue. We concluded that the relationship between variables had changed over the 25-year period, making a single, unified model on this dataset unreliable.
+### Tomorrow's forecast, honest day-ahead test (Jan 2024 – Aug 2025, 583 days, blocked cross-validation)
 
-2.  **The `Hybrid Physics Model` Experiment (The Overfitting Problem):**
-    *   **Attempt:** To build a new, standalone forecaster on the recent, data-rich dataset (2020-2024), powered by sophisticated physics-informed features.
-    *   **Result:** These models failed to beat the Champion, with the best attempt yielding a t+1 Max Temp MAE of **1.54°C**.
-    *   **Diagnosis:** A classic case of **severe overfitting**. The models were too complex for the short 4-year time frame; they had deep physics knowledge but lacked the long-term "experience" of the Champion and were "memorizing" noise.
+| Model | Max MAE | Min MAE | Rain Brier | Clothing band right* |
+| --- | --- | --- | --- | --- |
+| **MOS v2.1 (live)** | 1.09 | **0.81** | **0.117** | 87% |
+| MOS v2 (8 weather models, 145 features) | **1.06** | 0.85 | 0.129 | 88% |
+| Champion v2 / Rain v1 (station only) | 1.21 | 0.83 | 0.129 | 78% |
+| Best single weather model, bias-corrected | 1.41 | 0.95 | – | 66% |
+| Persistence (tomorrow = today) | 1.33 | 0.86 | – | 75% |
 
-#### Phase 4: The Strategic Pivot to a "Confidence Model"
-These critical findings led to the final, successful strategy. If the recent data couldn't improve the forecast's *accuracy*, perhaps it could predict its *reliability*. The project was repurposed to build a classifier to predict when the Champion's forecast is likely to have a high error. This required a deep dive into advanced feature engineering, including `Dew_Point`, `Intra-Day Solar Dynamics`, and `Dynamic Anomaly` features, as well as a careful, cross-validated tuning process to balance the Precision-Recall trade-off.
+\* Right 5 °C clothing band for the afternoon high, with "bring a layer" advice counted as covering both neighbouring bands.
+
+- The 10–90% range contains the actual high **78%** of the time and the actual low **80%** of the time (target 80%).
+- The umbrella flag catches **85%** of wet days and is right **70%** of the time it says yes.
+- MOS gains most in **winter** (0.80 vs 1.03 °C) and the **pre-monsoon and monsoon** seasons, when incoming weather systems matter and station history alone can't see them coming.
+
+### Station-only models (test period Aug 2019 – 2024)
+
+| Model | Max MAE t+1 | Min MAE t+1 |
+| --- | --- | --- |
+| Phase 1 champion (2025) | 1.34 | 0.94 |
+| Persistence | 1.39 | 0.91 |
+| **Champion v2** | **1.24** | **0.85** |
+
+### Lessons worth keeping
+
+- **Baselines first.** The original champion barely beat "tomorrow = today" and lost to it on minimum temperature. Champion v2 fixed that by feeding today's readings in directly, predicting anomalies from a training-only climatology, and dropping the `Year` feature that trees can't extrapolate.
+- **Beware flattering archives.** MOS v1, trained on Open-Meteo's historical-forecast archive (stitched from the first hours of each model run), scored 0.87 °C. Retrained on genuine 24-hour-ahead forecasts, the honest figure is about 1.1 °C. Most of the "improvement" was look-ahead.
+- **Fewer, better inputs.** With under 600 days of training data, pruning from 145 to 53 features and dropping two short-history weather models improved minimum temperature and rain.
+- **Uncertainty needs calibration.** Raw quantile ranges covered only 37–62% of outcomes; conformal widening brings them to the stated 80%.
+
+## Real-world verification
+
+Lab scores are not the same as real days, so every live forecast is logged in [`data/verification/forecast_log.csv`](data/verification/forecast_log.csv), next to a raw Open-Meteo forecast as a "typical weather app" reference. Observed weather from the MFD/DHM daily bulletin is added to `data/verification/observations.csv`, and
+
+```
+python -m src.verify report
+```
+
+prints a scorecard for days 1–3: error and warm/cold bias, clothing-band accuracy, range hit rate, and rain caught vs false alarms, side by side with the reference. Logging started on 12 October 2026; results will be added here once about 30 days are verified.
+
+## Running it yourself
+
+See **[SETUP.md](SETUP.md)** for the full guide (Windows + Anaconda). In short:
+
+```
+conda create -n ktm-climate python=3.12 -y
+conda activate ktm-climate
+pip install -r requirements.txt
+python -m src.predict --replay 2023-07-15     # offline check
+python -m src.export_forecast                 # live forecast → docs/forecast.json
+python -m http.server 8000 -d docs            # app at http://localhost:8000
+```
+
+Repository layout:
+
+```
+src/          forecasting, training, live input, export and verification code
+models/       trained models as XGBoost JSON (MOS v2.1, MOS v2, Champion v2, Rain v1)
+notebooks/    station-only model development (Champion v2, Rain v1) and the original 2025 work
+docs/         the app (index.html) and tonight's forecast.json, served by GitHub Pages
+data/         station record and the verification log
+.github/      the daily forecast workflow
+assets/       README images
+```
+
+## Data and credits
+
+- **Station record:** Department of Hydrology and Meteorology (DHM), Nepal, Kathmandu Airport, daily, 1999 – Oct 2024.
+- **Recent station data:** NOAA Global Summary of the Day (GSOD), station 444540 (VNKT), bias-adjusted to the DHM record (MAE about 0.5 °C over 25 years of overlap).
+- **Weather-model forecasts and live data:** [Open-Meteo.com](https://open-meteo.com/), licensed under CC BY 4.0, serving forecasts from ECMWF, DWD (ICON), NOAA (GFS), JMA and CMA.
+- **Fonts:** Bricolage Grotesque, Atkinson Hyperlegible and Mukta (Google Fonts).
+
+Avatars and clothing illustrations are original, drawn in code. Skin tone, hair and clothing are chosen by the user; the app never infers ethnicity or religion.
+
+## Limitations
+
+- **One station.** Forecasts are for Kathmandu Airport. Higher parts of the valley (Thankot, Godawari, Budhanilkantha) can be 2–3 °C cooler; the city centre can be warmer.
+- **Winter mornings are hardest.** Cold-air pooling on the valley floor is where every model, ours included, struggles most.
+- **Data lag.** NOAA's GSOD file currently lags by months, which limits how recent the training data can be.
+- **Not an official forecast.** For warnings and severe weather, follow the Meteorological Forecasting Division (DHM).
+
+## Project history
+
+This repository began in 2025 as a temperature-forecasting study on 25 years of DHM data:
+
+1. **Champion forecaster:** XGBoost vs Random Forest with time-series cross-validation; XGBoost won (t+1 Max MAE 1.34 °C).
+2. **The data gap:** richer atmospheric variables (humidity, wind, solar radiation) existed only from late 2020, ruling out a simple merge.
+3. **Failed improvements:** adding 25 years of humidity made the model worse (non-stationarity); a physics-informed model on 2020–2024 data overfit.
+4. **Confidence model:** a classifier to flag days likely to have high forecast error.
+
+The 2026 rebuild re-benchmarked everything against persistence, replaced the confidence classifier with calibrated forecast ranges, added global weather models through MOS, and turned the forecasts into the K Laune app. The original notebooks remain in `notebooks/`.
+
+## Roadmap
+
+- **Rolling bias correction** from the verification log once 30+ days are verified.
+- **Comfort feedback** ("too cold / just right / too warm") to tune each user's cold sensitivity over time.
+- **Neighbourhood elevation adjustment** using the standard lapse rate (about 0.6 °C cooler per 100 m).
+- **More stations** across the valley, if DHM data can be obtained.
+- **Retraining every few months** as new station data arrives.
 
 ---
 
-### Final Model Performance
-
-This two-track strategy yielded two successful, specialized models.
-
-#### Forecasting Engine (`Champion Model`) Performance
-This model remains the most accurate direct forecaster, outperforming all other experimental regression models.
-
-**Full Performance Metrics Table (t+1 Horizon, MAE):**
-| Model | Max Temp MAE | Min Temp MAE | Notes |
-| :--- | :---: | :---: | :--- |
-| Linear Regression | 1.35°C | 0.96°C | The initial baseline. |
-| Tuned Random Forest | 1.40°C | 0.96°C | Outperformed by XGBoost. |
-| XGBoost on `df_historical` | 1.64°C | 1.39°C | Degraded performance due to non-stationarity. |
-| Physics-Aware Model (`df_recent`) | 1.54°C | 0.92°C | Strong `Min Temp` but poor `Max Temp` due to overfitting. |
-| **XGBoost Champion (Final)** | **1.34°C** | **0.94°C** | **The winning forecaster.** |
-
-#### Confidence Engine (`Final Tuned Classifier`) Performance
-The final classifier was optimized for a balance between precision and recall, resulting in a system that provides a reliable warning for potentially inaccurate forecasts.
-
-| ![Confusion Matrix](images/confidence_confusion_matrix.png) | ![Feature Importance](images/confidence_feature_importance.png) |
-| :---: | :---: |
-| *Confusion Matrix for the Final Confidence Model* | *Top Features Driving Forecast Unpredictability* |
-
-**Final Classification Report:**
-| Class | Precision | Recall | F1-Score | Accuracy
-| :--- | :---: | :---: | :---: | :---: |
-| Normal Day | 0.71 | 0.98 | 0.80 |   |
-| **High-Error Day**| **0.43** | **0.20** | 0.27 | 0.69 |
-
-**Conclusion:** The Confidence Model was tuned to be highly "cautious" and reliable. While it identifies a smaller subset of high-error days (20% recall), the warnings it provides are somewhat precise (**43% precision**). This means that when the model *does* raise a red flag, it is a very trustworthy signal of atmospheric instability, providing a significant "edge" over the 25% baseline chance.
-
----
-
-### Application & Deployment Blueprint
-
-This two-part system is designed to be deployed as a simple API that could power an interactive web application or be used for research.
-
-#### Backend (Python with Flask/FastAPI)
-1.  **API Endpoint:** A single endpoint `POST /predict` would accept a JSON object with the latest day's weather data.
-2.  **Model Loading:** On startup, the server would load both `champion_model_phase1.joblib` and the final `confidence_model.joblib` into memory.
-3.  **Feature Engineering:** A dedicated module would take the input JSON and perform all the necessary feature engineering steps to prepare the data for both models.
-4.  **Prediction Logic:**
-    *   The feature vector for the Champion is passed to the **Forecasting Engine** to get the 3-day temperature predictions.
-    *   The feature vector for the Co-Pilot is passed to the **Confidence Engine** to get the `t+1` confidence score.
-5.  **API Response:** The endpoint returns a clean JSON object:
-    ```json
-    {
-      "forecast_t+1": {
-        "max_temp_c": 29.5,
-        "min_temp_c": 18.2,
-        "confidence": "HIGH" // or "LOW"
-      },
-      "forecast_t+2": { ... },
-      "forecast_t+3": { ... }
-    }
-    ```
-
----
-
-### Future Work: Deep Learning
-The next phase of this project will explore if **LSTMs (Long Short-Term Memory networks)**, using the rich physics-informed features from the recent data, can build a more sensitive "Confidence Engine" (improving recall) or challenge the Champion forecaster directly.
-
----
-
-### Technologies & Libraries
-*   **Languages:** Python
-*   **Libraries:** Pandas, NumPy, Scikit-learn, XGBoost, Matplotlib, Seaborn, Joblib
-
----
-
-### Acknowledgements
-The historical climate data used in this project was provided by the Department of Hydrology and Meteorology (DHM), Government of Nepal. A huge shoutout to GD Labs and Research for helping acquire the data. 
+Built by **Binamra Bhusal**, environmental engineer, Kathmandu.
