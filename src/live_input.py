@@ -83,7 +83,7 @@ def fetch_history(start: str, end: str) -> pd.DataFrame:
 def load_calibration(path: Path = CALIBRATION_PATH):
     if not Path(path).exists():
         return None
-    return json.loads(Path(path).read_text())
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def apply_calibration(df: pd.DataFrame, cal: dict | None) -> pd.DataFrame:

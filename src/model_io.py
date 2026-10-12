@@ -18,12 +18,12 @@ MODELS_DIR = Path(__file__).resolve().parents[1] / "models"
 def _write_meta(folder: Path, meta: dict, clim: pd.DataFrame):
     folder.mkdir(parents=True, exist_ok=True)
     meta = {"xgboost_version": xgb.__version__, **meta}
-    (folder / "meta.json").write_text(json.dumps(meta, indent=2, default=str))
+    (folder / "meta.json").write_text(json.dumps(meta, indent=2, default=str), encoding="utf-8")
     clim.to_csv(folder / "climatology.csv", index_label="Day_of_Year")
 
 
 def _read_meta(folder: Path):
-    meta = json.loads((folder / "meta.json").read_text())
+    meta = json.loads((folder / "meta.json").read_text(encoding="utf-8"))
     clim = pd.read_csv(folder / "climatology.csv", index_col="Day_of_Year")
     trained = meta.get("xgboost_version")
     if trained and trained.split(".")[:2] != xgb.__version__.split(".")[:2]:

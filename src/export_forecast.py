@@ -45,7 +45,7 @@ def main():
     fc["generated_at"] = datetime.now(NPT).isoformat(timespec="minutes")
     fc["location"] = "Kathmandu (Tribhuvan Airport)"
     OUT.parent.mkdir(exist_ok=True)
-    OUT.write_text(json.dumps(fc, indent=2, ensure_ascii=False))
+    OUT.write_text(json.dumps(fc, indent=2, ensure_ascii=False), encoding="utf-8")
     if not args.replay:  # replays are tests, not real forecasts: keep them out of the track record
         try:
             from src.verify import fetch_reference, log_forecast
