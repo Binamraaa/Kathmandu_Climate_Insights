@@ -4,3 +4,5 @@ __pycache__/
 data/nwp_cache/
 data/nwp_cache_v2/
 data/verification/export_log.txt
+*_results.csv
+data/gsod_kathmandu.csv
