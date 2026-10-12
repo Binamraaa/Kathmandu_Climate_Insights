@@ -39,7 +39,7 @@ def main():
     agree = ((both["Precipitation_mm_om"] * cal["precip_scale"] >= WET_DAY_MM) == (both["Precipitation_mm"] >= WET_DAY_MM)).mean()
     print(f"Precip: station wet-day rate {station_wet_rate:.0%}, scale {cal['precip_scale']}, wet/dry agreement {agree:.0%}")
 
-    CALIBRATION_PATH.write_text(json.dumps(cal, indent=2))
+    CALIBRATION_PATH.write_text(json.dumps(cal, indent=2), encoding="utf-8")
     print(f"Saved {CALIBRATION_PATH}")
 
 
