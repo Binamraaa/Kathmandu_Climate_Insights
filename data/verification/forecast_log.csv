@@ -1,0 +1,7 @@
+issued,target,horizon,source,max,min,max_lo,max_hi,rain_prob,umbrella,live
+2026-10-12,2026-10-13,1,MOS v2.1 (pruned) (6 weather models),28.0,14.4,26.6,29.5,0.05,False,True
+2026-10-12,2026-10-13,1,Open-Meteo raw (reference),24.5,15.9,,,0.69,True,True
+2026-10-12,2026-10-14,2,Champion v2 / Rain v1,26.9,15.3,,,0.2,False,True
+2026-10-12,2026-10-14,2,Open-Meteo raw (reference),24.7,14.9,,,0.53,True,True
+2026-10-12,2026-10-15,3,Champion v2 / Rain v1,26.8,14.9,,,0.17,False,True
+2026-10-12,2026-10-15,3,Open-Meteo raw (reference),23.9,15.6,,,0.51,True,True

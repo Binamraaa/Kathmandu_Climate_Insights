@@ -1,0 +1,6 @@
+# Minimal set for the daily forecast job (no notebooks)
+pandas==3.0.2
+numpy==2.4.4
+scikit-learn==1.8.0
+xgboost==3.4.1
+requests==2.33.1

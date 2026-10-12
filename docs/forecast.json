@@ -1,0 +1,49 @@
+{
+  "issued_for": "2026-10-12",
+  "days": [
+    {
+      "date": "2026-10-13",
+      "horizon": 1,
+      "model": "MOS v2.1 (pruned) (6 weather models)",
+      "max_temp_c": 28.0,
+      "min_temp_c": 14.4,
+      "rain_prob": 0.05,
+      "umbrella": false,
+      "outfit": "Hot (25–30°C)",
+      "layer": false,
+      "max_range_c": [
+        26.6,
+        29.5
+      ],
+      "min_range_c": [
+        13.6,
+        16.2
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "horizon": 2,
+      "model": "Champion v2 / Rain v1",
+      "max_temp_c": 26.9,
+      "min_temp_c": 15.3,
+      "rain_prob": 0.2,
+      "umbrella": false,
+      "outfit": "Hot (25–30°C)",
+      "layer": false
+    },
+    {
+      "date": "2026-10-15",
+      "horizon": 3,
+      "model": "Champion v2 / Rain v1",
+      "max_temp_c": 26.8,
+      "min_temp_c": 14.9,
+      "rain_prob": 0.17,
+      "umbrella": false,
+      "outfit": "Hot (25–30°C)",
+      "layer": false
+    }
+  ],
+  "input_source": "Open-Meteo (bias-corrected)",
+  "generated_at": "2026-10-12T16:11+05:45",
+  "location": "Kathmandu (Tribhuvan Airport)"
+}
