@@ -33,6 +33,9 @@ def merge_with_previous(fc: dict, today: pd.Timestamp, prev: dict | None) -> dic
         return fc
     new_dates = {d["date"] for d in fc["days"]}
     keep = [d for d in prev.get("days", []) if d["date"] >= str(today.date()) and d["date"] not in new_dates]
+    for d in keep:  # files written by older versions lack these fields
+        d.setdefault("run", "evening")
+        d.setdefault("updated_at", prev.get("generated_at"))
     fc["days"] = sorted(keep + fc["days"], key=lambda d: d["date"])[:MAX_DAYS]
     return fc
 
@@ -89,7 +92,7 @@ def main():
     fc["location"] = "Kathmandu (Tribhuvan Airport)"
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(fc, indent=2, ensure_ascii=False), encoding="utf-8")
-    shown = ", ".join(f"{d['date']} {d['max_temp_c']}/{d['min_temp_c']}°C [{d['run']}]" for d in fc["days"])
+    shown = ", ".join(f"{d['date']} {d['max_temp_c']}/{d['min_temp_c']}°C [{d.get('run', '?')}]" for d in fc["days"])
     print(f"Wrote {OUT} ({mode} run): {shown}")
 
     if not args.replay:  # replays are tests, not real forecasts: keep them out of the track record
