@@ -1,0 +1,12 @@
+* text=auto
+*.bat text eol=crlf
+*.json -text
+*.png binary
+
+# GitHub language stats: count the app (docs/ is treated as documentation by default)
+docs/** linguist-documentation=false
+docs/forecast.json linguist-generated=true
+
+# Optional: uncomment to leave the notebooks out of the language bar
+# (their embedded charts make "Jupyter Notebook" about 97% of the bytes)
+# notebooks/** linguist-documentation=true
