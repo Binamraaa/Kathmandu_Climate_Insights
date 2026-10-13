@@ -110,7 +110,7 @@ The second line runs it straight away as a test; check `export_log.txt` afterwar
 
 `docs/index.html` is a single file: no build step. It reads `docs/forecast.json` (shows "Sample data" without it).
 
-- **First visit:** a 7-question avatar builder (age, man / woman / rather not say, skin tone, hair, usual style, walk or scooter, how much the cold bothers them). "My avatar" in the header reopens it.
+- **First visit:** a 7-step avatar builder (age, man / woman / rather not say, skin tone, hair and spectacles, usual style, walk or scooter, how much the cold bothers them). Cap, sunglasses and mask are chosen on the main screen on days that call for them. "My avatar" in the header reopens it.
 - **Main view:** morning and afternoon avatars in the recommended outfits, a one-line headline, rain chip (umbrella, or raincoat for riders), and the next two days.
 - **Outfit ideas:** a row of four mini avatars under the main look; the first is the suggestion, the rest are alternatives for the same weather. Tap the morning avatar to see morning ideas.
 - **Language:** the नेपाली / EN button switches between English and Roman Nepali.

@@ -56,6 +56,16 @@ h1{font-family:var(--display); font-weight:800; font-size:clamp(28px,8vw,38px); 
 .chip.wet{background:var(--monsoon); color:#fff}
 .chip.warn{background:#8a4b2a; color:#fff}
 .chip .sub{font-weight:400; opacity:.8}
+.wear-row{display:grid; grid-template-columns:1fr; gap:6px 10px; margin:-10px 0 22px; font-size:14px; color:var(--ink-soft); text-align:center}
+.wear-row.two{grid-template-columns:1fr 1fr}
+.wear-row:empty{display:none}
+.wear-row p{grid-column:1 / -1; margin:0}
+.wear-cell{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px}
+.wear-cell span{width:100%; font-size:13px}
+.wear{appearance:none; border:1px solid var(--line); background:transparent; color:inherit; font:inherit; font-size:14px; border-radius:999px; padding:4px 11px 4px 9px; cursor:pointer}
+.wear::before{content:"○ "}
+.wear[aria-pressed="true"]{color:var(--ink); background:var(--card); border-color:transparent}
+.wear[aria-pressed="true"]::before{content:"✓ "}
 .days{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 0 18px}
 .day{appearance:none; border:1px solid var(--line); background:transparent; color:inherit; font:inherit; padding:9px 10px 10px; border-radius:14px; cursor:pointer; text-align:left; min-width:0}
 .day[aria-pressed="true"]{background:var(--card); border-color:transparent; box-shadow:0 0 0 2px var(--ink) inset}
