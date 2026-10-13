@@ -17,7 +17,7 @@ Windows + Anaconda. Project folder: `C:\Users\ALiEN\Kathmandu_climate_history`.
 
 | When | What | Command |
 | --- | --- | --- |
-| Every evening, 20:00 | Forecast + app update + log (automatic once scheduled, section 4) | `python -m src.export_forecast` |
+| Automatic (GitHub Action) | Morning run ~05:25 forecasts today; evening run ~17:32 forecasts tomorrow | `python -m src.export_forecast` (mode follows the clock; `--mode morning/evening` to force) |
 | Next day, after the MFD/DHM bulletin | Record yesterday's actual weather | `python -m src.verify add 2026-10-13 --max 27.5 --min 14.8 --rain 0` |
 | Any time | See the app | `python -m http.server 8000 -d docs`, then open http://localhost:8000 |
 | Weekly | Accuracy scorecard | `python -m src.verify report` |
@@ -43,7 +43,7 @@ Kathmandu_climate_history/
 ├── notebooks/                    champion_v2.ipynb, rain_classifier.ipynb
 ├── src/
 │   ├── features.py, model_io.py, mos_features.py   shared code
-│   ├── live_input.py, nwp_hourly.py                live Open-Meteo data
+│   ├── live_input.py, nwp_hourly.py, extras.py     live Open-Meteo data (incl. UV, wind, AQI)
 │   ├── calibrate_openmeteo.py                      builds the live-input correction
 │   ├── predict.py                                  3-day forecast in the terminal
 │   ├── export_forecast.py                          writes docs/forecast.json + logs it
@@ -91,7 +91,7 @@ python -m src.predict --json          # same, as JSON
 python -m src.export_forecast         # update the app + log the forecast
 ```
 
-The `export_forecast` line should end with `[MOS v2.1 (pruned) (6 weather models)]`. Run it after about 6 pm, when today's high and rain total are settled.
+`export_forecast` picks its mode from the Nepal clock: before 12:00 it forecasts today from yesterday's complete data; from 12:00 it forecasts tomorrow. It keeps today's morning forecast in the file, so the app can show today in the daytime and tomorrow from 5 pm.
 
 ## 4. Run it automatically every evening (Windows)
 
@@ -144,7 +144,7 @@ Then on GitHub:
 1. **Settings → Pages → Deploy from a branch**, branch `main`, folder `/docs`. Save.
 2. **Settings → Actions → General → Workflow permissions → Read and write permissions.**
 3. **Actions → "Daily forecast" → Run workflow** to create the first live `forecast.json`.
-4. The app is at `https://<your-username>.github.io/<repo-name>/`. The job runs every evening at 18:15 Nepal time and commits the forecast and log. On a phone, "Add to Home Screen" makes it feel like an app.
+4. The app is at `https://binamraaa.github.io/Kathmandu_Climate_Insights/`. The job runs twice a day (about 05:25 and 17:32 Nepal time; GitHub can delay scheduled runs by up to an hour or more) and commits the forecast and log. "Run workflow" lets you choose auto, morning or evening. On a phone, "Add to Home Screen" makes it feel like an app.
 
 Once the Action runs, delete the Windows task (section 4), and `git pull` before adding observations.
 

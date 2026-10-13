@@ -17,7 +17,7 @@
 | **Live model** | MOS v2.1: XGBoost quantile models correcting global weather models with station history |
 | **Accuracy (tomorrow)** | Max 1.09 °C, Min 0.81 °C mean error; 80% forecast ranges that hold; rain flag catches 85% of wet days |
 | **App** | One HTML file on GitHub Pages; avatar builder, outfit ideas, English / Nepali, scooter mode |
-| **Automation** | GitHub Action forecasts every evening at 18:15 NPT and logs each forecast for verification |
+| **Automation** | GitHub Action forecasts twice a day (05:25 for today, 17:32 for tomorrow, Nepal time) and logs each forecast for verification |
 
 ---
 
@@ -54,6 +54,7 @@
 - **Morning and afternoon looks.** Kathmandu's day-night swing is large, so the app shows what to wear at about 8 am and at the afternoon high, e.g. *sweater in the morning, T-shirt by afternoon*.
 - **Options, not orders.** An "Other ideas" row offers three alternatives for the same weather, mostly from your own style plus one crossover. The catalogue includes leather and denim jackets, flannel and linen shirts, kurti with jeans, pashmina, haku patasi, bakhu and gunyu-cholo.
 - **Honest uncertainty.** Tomorrow's high comes with a 10–90% range. When the range straddles a clothing boundary, the advice says "bring a layer" instead of guessing, tuned to appear on about a quarter of days.
+- **More than temperature.** The advice also weighs UV (cap, sunglasses, sunscreen, or a chata for shade), wind, humidity ("feels like" and muggy days), air quality (a mask chip when AQI is high, common in Kathmandu's dry season), and an "out late?" note when the evening calls for something warmer. The morning and evening temperatures follow the weather models' hour-by-hour curve, scaled to our corrected low and high.
 - **Scooter mode.** Riders get wind-chill-adjusted advice (about 4 °C colder in the morning), a raincoat instead of an umbrella, and gloves on cold mornings.
 - **Two languages.** English, or Nepali with key words in Devanagari and familiar garment names kept as people say them (बिहान hoodie, दिउँसो T-shirt।).
 - **Light and private.** One HTML file, no framework, no tracking. Your avatar is stored only in your own browser.
@@ -70,9 +71,9 @@ flowchart LR
     D --> G[Verification log]
 ```
 
-1. **Every evening at 18:15 Nepal time** a GitHub Action runs `src/export_forecast.py`.
-2. **Tomorrow** comes from **MOS v2.1** (Model Output Statistics): XGBoost models that take day-ahead forecasts from six global weather models (ECMWF IFS, DWD ICON, NOAA GFS, JMA, CMA and Open-Meteo best match) together with recent station history, and learn how to correct them for Kathmandu. Global models see the valley as a blur of valley floor and surrounding hills and run 2–3 °C too cold on raw output; MOS learns that correction from the airport record.
-3. **Days 2 and 3** come from the station-only models (Champion v2 for temperature, Rain v1 for rain).
+1. **Twice a day** a GitHub Action runs `src/export_forecast.py`: at about **05:25 Nepal time** it forecasts **today** (using yesterday's complete data), and at about **17:32** it forecasts **tomorrow**. The mode follows the Nepal clock, so a delayed run still does the right thing, and today's forecast stays in the app all day. The app opens on today during the day and on tomorrow from 5 pm.
+2. **The next forecast day** (today in the morning run, tomorrow in the evening run) comes from **MOS v2.1** (Model Output Statistics): XGBoost models that take day-ahead forecasts from six global weather models (ECMWF IFS, DWD ICON, NOAA GFS, JMA, CMA and Open-Meteo best match) together with recent station history, and learn how to correct them for Kathmandu. Global models see the valley as a blur of valley floor and surrounding hills and run 2–3 °C too cold on raw output; MOS learns that correction from the airport record.
+3. **The following two days** come from the station-only models (Champion v2 for temperature, Rain v1 for rain).
 4. The forecast is committed to `docs/forecast.json`, served to the app by GitHub Pages, and appended to the verification log.
 5. The app turns temperatures into outfits with simple, readable rules (six warmth tiers for each clothing style), adjusted for the user's cold sensitivity and travel mode.
 
@@ -253,8 +254,10 @@ assets/       README images
 
 - **Station record:** Department of Hydrology and Meteorology (DHM), Government of Nepal, Kathmandu Airport, daily, 1999–2024. Many thanks to **GD Labs and Research** for helping acquire the data.
 - **Recent station data:** NOAA Global Summary of the Day (GSOD), station 444540 (VNKT).
-- **Weather-model forecasts and live data:** [Open-Meteo.com](https://open-meteo.com/), licensed under CC BY 4.0, serving forecasts from ECMWF, DWD (ICON), NOAA (GFS), JMA and CMA.
+- **Weather-model forecasts and live data:** [Open-Meteo.com](https://open-meteo.com/), licensed under CC BY 4.0, serving forecasts from ECMWF, DWD (ICON), NOAA (GFS), JMA and CMA, and air-quality forecasts from the Copernicus Atmosphere Monitoring Service (CAMS).
 - **Fonts:** Bricolage Grotesque, Atkinson Hyperlegible and Mukta (Google Fonts).
+
+Developed with assistance from Claude (Anthropic), used for code, model evaluation and documentation.
 
 Avatars and clothing illustrations are original, drawn in code. Skin tone, hair and clothing are chosen by the user; the app never infers ethnicity or religion.
 
@@ -264,6 +267,7 @@ Avatars and clothing illustrations are original, drawn in code. Skin tone, hair 
 - **Winter mornings are hardest.** Cold-air pooling on the valley floor is where every model, ours included, struggles most.
 - **Data lag.** NOAA's GSOD file currently lags by months, which limits how recent the training data can be.
 - **Short MOS history.** Genuine day-ahead archives start in 2024, so MOS has seen fewer than two monsoons.
+- **Extras are uncorrected.** UV, wind, humidity and air quality come straight from Open-Meteo (weather models and the CAMS air-quality model, about 40 km resolution). CAMS can underestimate pollution trapped in the valley on still winter days.
 - **Not an official forecast.** For warnings and severe weather, follow the Meteorological Forecasting Division (DHM).
 
 ## 13. Roadmap

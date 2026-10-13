@@ -43,7 +43,7 @@ def fetch_reference(days: int = 4) -> pd.DataFrame | None:
         return None
 
 
-def log_forecast(fc: dict, reference: pd.DataFrame | None = None, live: bool = True):
+def log_forecast(fc: dict, reference: pd.DataFrame | None = None, live: bool = True, run: str = "evening"):
     """Append one row per forecast day (and per reference day) to the log."""
     VDIR.mkdir(parents=True, exist_ok=True)
     issued = fc["issued_for"]
@@ -52,7 +52,7 @@ def log_forecast(fc: dict, reference: pd.DataFrame | None = None, live: bool = T
         rows.append({"issued": issued, "target": d["date"], "horizon": d["horizon"], "source": d["model"],
                      "max": d["max_temp_c"], "min": d["min_temp_c"],
                      "max_lo": (d.get("max_range_c") or [None, None])[0], "max_hi": (d.get("max_range_c") or [None, None])[1],
-                     "rain_prob": d["rain_prob"], "umbrella": d["umbrella"], "live": live})
+                     "rain_prob": d["rain_prob"], "umbrella": d["umbrella"], "live": live, "run": run})
     if reference is not None:
         for _, r in reference.iterrows():
             h = (pd.Timestamp(r["date"]) - pd.Timestamp(issued)).days
@@ -60,12 +60,15 @@ def log_forecast(fc: dict, reference: pd.DataFrame | None = None, live: bool = T
                 rows.append({"issued": issued, "target": r["date"], "horizon": h, "source": "Open-Meteo raw (reference)",
                              "max": r["max"], "min": r["min"], "max_lo": None, "max_hi": None,
                              "rain_prob": r["rain_prob"], "umbrella": None if pd.isna(r["rain_prob"]) else bool(r["rain_prob"] >= 0.4),
-                             "live": live})
+                             "live": live, "run": run})
     new = pd.DataFrame(rows)
     if FLOG.exists():
         old = pd.read_csv(FLOG)
-        # one forecast per (issued, target, source): the latest run wins
-        new = pd.concat([old, new]).drop_duplicates(["issued", "target", "source"], keep="last")
+        if "run" not in old:
+            old["run"] = "evening"
+        old["run"] = old["run"].fillna("evening")
+        # one forecast per (issued, target, source, run): the latest run wins
+        new = pd.concat([old, new]).drop_duplicates(["issued", "target", "source", "run"], keep="last")
     new.sort_values(["target", "source", "horizon"]).to_csv(FLOG, index=False)
     print(f"Logged {len(rows)} forecast rows to data/verification/{FLOG.name}")
 
@@ -86,6 +89,13 @@ def report():
     if not FLOG.exists() or not OBS.exists():
         raise SystemExit("Need both a forecast log and observations. Run export_forecast, then `verify add` for past days.")
     f = pd.read_csv(FLOG)
+    if "run" not in f:
+        f["run"] = "evening"
+    f["run"] = f["run"].fillna("evening")
+    # morning runs are issued "as of yesterday", so their day 1 is the same day
+    f["lead"] = np.where((f["run"] == "morning") & (f["horizon"] == 1), "Today (morning run)",
+                np.where(f["run"] == "morning", "Day " + (f["horizon"] - 1).astype(str) + " (morning run)",
+                         "Day " + f["horizon"].astype(str)))
     o = pd.read_csv(OBS).rename(columns={"date": "target", "max": "obs_max", "min": "obs_min"})
     m = f.merge(o, on="target")
     if m.empty:
@@ -98,8 +108,8 @@ def report():
 
     print(f"Verified days: {m.target.nunique()} ({m.target.min()} → {m.target.max()})\n")
     rows = []
-    for (h, k), g in m.groupby(["horizon", "k_laune"]):
-        r = {"Horizon": f"Day {h}", "Source": "K Laune" if k else "Typical app", "Days": len(g),
+    for (h, k), g in m.groupby(["lead", "k_laune"]):
+        r = {"Horizon": h, "Source": "K Laune" if k else "Typical app", "Days": len(g),
              "Max MAE": (g["max"] - g.obs_max).abs().mean(), "Max bias": (g["max"] - g.obs_max).mean(),
              "Min MAE": (g["min"] - g.obs_min).abs().mean(), "Min bias": (g["min"] - g.obs_min).mean(),
              "Band right": np.mean(band(g["max"]) == band(g.obs_max))}
