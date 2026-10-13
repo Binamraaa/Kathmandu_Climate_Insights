@@ -5,8 +5,8 @@ Open-Meteo forecast as a "typical weather app" reference) to
 data/verification/forecast_log.csv.
 
 You add what actually happened (MFD/DHM daily bulletin, your own notes):
-    python -m src.verify add 2026-10-13 --max 27.5 --min 14.8 --rain 0
-    python -m src.verify add 2026-10-14 --max 26 --min 15 --rain 3.2
+    python -m src.verify add 2026-10-13 --min 14.5            # same morning's MFD bulletin
+    python -m src.verify add 2026-10-13 --max 27.6 --rain 0   # next morning's bulletin
 
 Then see the scorecard:
     python -m src.verify report
@@ -74,14 +74,25 @@ def log_forecast(fc: dict, reference: pd.DataFrame | None = None, live: bool = T
 
 
 # ------------------------------------------------------------------ observations
-def add_observation(day: str, tmax: float, tmin: float, rain_mm: float | None, note: str = ""):
+def add_observation(day: str, tmax: float | None, tmin: float | None, rain_mm: float | None, note: str = ""):
+    """Record what happened on `day`. Values can be added in separate steps (MFD gives
+    the low in the same morning's bulletin, the high and rain the next morning);
+    anything left out keeps its earlier value."""
     VDIR.mkdir(parents=True, exist_ok=True)
-    row = pd.DataFrame([{"date": pd.Timestamp(day).strftime("%Y-%m-%d"), "max": tmax, "min": tmin,
-                         "rain_mm": rain_mm, "note": note}])
-    if OBS.exists():
-        row = pd.concat([pd.read_csv(OBS), row]).drop_duplicates("date", keep="last")
-    row.sort_values("date").to_csv(OBS, index=False)
-    print(f"Saved observation for {day}: max {tmax}, min {tmin}, rain {rain_mm if rain_mm is not None else '–'} mm")
+    day = pd.Timestamp(day).strftime("%Y-%m-%d")
+    obs = pd.read_csv(OBS) if OBS.exists() else pd.DataFrame(columns=["date", "max", "min", "rain_mm", "note"])
+    old = obs[obs["date"] == day]
+    row = old.iloc[0].to_dict() if len(old) else {"date": day, "max": None, "min": None, "rain_mm": None, "note": ""}
+    for k, v in [("max", tmax), ("min", tmin), ("rain_mm", rain_mm)]:
+        if v is not None:
+            row[k] = v
+    if note:
+        prev = row.get("note")
+        row["note"] = note if (pd.isna(prev) or not prev) else f"{prev}; {note}"
+    obs = pd.concat([obs[obs["date"] != day], pd.DataFrame([row])]).sort_values("date")
+    obs.to_csv(OBS, index=False)
+    show = lambda v, u="": "–" if v is None or pd.isna(v) else f"{v}{u}"
+    print(f"Saved observation for {day}: max {show(row['max'])}, min {show(row['min'])}, rain {show(row['rain_mm'], ' mm')}")
 
 
 # ------------------------------------------------------------------ scorecard
@@ -112,8 +123,8 @@ def report():
         r = {"Horizon": h, "Source": "K Laune" if k else "Typical app", "Days": len(g),
              "Max MAE": (g["max"] - g.obs_max).abs().mean(), "Max bias": (g["max"] - g.obs_max).mean(),
              "Min MAE": (g["min"] - g.obs_min).abs().mean(), "Min bias": (g["min"] - g.obs_min).mean(),
-             "Band right": np.mean(band(g["max"]) == band(g.obs_max))}
-        rng = g.dropna(subset=["max_lo", "max_hi"])
+             "Band right": (lambda h: np.mean(band(h["max"]) == band(h.obs_max)) if len(h) else np.nan)(g.dropna(subset=["obs_max"]))}
+        rng = g.dropna(subset=["max_lo", "max_hi", "obs_max"])
         r["Range hit"] = np.mean((rng.obs_max >= rng.max_lo) & (rng.obs_max <= rng.max_hi)) if len(rng) else np.nan
         w = g.dropna(subset=["wet", "umbrella"])
         if len(w):
@@ -125,9 +136,9 @@ def report():
     res = pd.DataFrame(rows)
     fmt = res.copy()
     for c in ["Max MAE", "Min MAE"]:
-        fmt[c] = res[c].map("{:.2f}".format)
+        fmt[c] = res[c].map(lambda v: f"{v:.2f}" if pd.notna(v) else "–")
     for c in ["Max bias", "Min bias"]:
-        fmt[c] = res[c].map("{:+.2f}".format)
+        fmt[c] = res[c].map(lambda v: f"{v:+.2f}" if pd.notna(v) else "–")
     for c in ["Band right", "Range hit", "Rain caught", "False alarms"]:
         if c in res:
             fmt[c] = res[c].map(lambda v: f"{v:.0%}" if pd.notna(v) else "–")
@@ -135,7 +146,7 @@ def report():
     print(fmt.to_string(index=False))
 
     d1 = res[res.Horizon == "Day 1"].set_index("Source")
-    if {"K Laune", "Typical app"} <= set(d1.index):
+    if {"K Laune", "Typical app"} <= set(d1.index) and d1["Max MAE"].notna().all():
         diff = d1.loc["Typical app", "Max MAE"] - d1.loc["K Laune", "Max MAE"]
         print(f"\nTomorrow's high: K Laune is {abs(diff):.2f} °C {'more' if diff > 0 else 'less'} accurate than a typical app.")
     n = m[m.k_laune & (m.horizon == 1)].target.nunique()
@@ -148,8 +159,8 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("add", help="record what actually happened on a day")
     a.add_argument("date", help="YYYY-MM-DD")
-    a.add_argument("--max", type=float, required=True, help="observed high, °C")
-    a.add_argument("--min", type=float, required=True, help="observed low, °C")
+    a.add_argument("--max", type=float, help="observed high, °C (MFD: next morning's bulletin)")
+    a.add_argument("--min", type=float, help="observed low, °C (MFD: same morning's bulletin)")
     a.add_argument("--rain", type=float, help="observed rain, mm (0 if dry; leave out if unknown)")
     a.add_argument("--note", default="", help="e.g. 'MFD bulletin' or 'sunny, cool breeze'")
     sub.add_parser("report", help="print the accuracy scorecard")
@@ -157,6 +168,8 @@ def main():
     if args.cmd == "add":
         if pd.Timestamp(args.date).date() > date.today():
             raise SystemExit("That date is in the future: observations are for days that already happened.")
+        if args.max is None and args.min is None and args.rain is None:
+            raise SystemExit("Give at least one of --max, --min, --rain.")
         add_observation(args.date, args.max, args.min, args.rain, args.note)
     else:
         report()
