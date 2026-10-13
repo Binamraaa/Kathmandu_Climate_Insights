@@ -6,7 +6,9 @@
 
 [![Daily forecast](https://github.com/Binamraaa/Kathmandu_Climate_Insights/actions/workflows/forecast.yml/badge.svg)](https://github.com/Binamraaa/Kathmandu_Climate_Insights/actions/workflows/forecast.yml)
 
-![Avatar gallery](assets/avatar_gallery.png)
+![K Laune on a phone: English and Nepali views, advice chips and the avatar builder](assets/app_screens.png)
+
+<sub>Left to right: a scooter rider's day in English (flannel shirt in the morning, T-shirt by afternoon, with alternatives); the Nepali view for an elder on a warm day; advice chips for UV, mugginess and the evening, with the day tabs; the avatar builder.</sub>
 
 ## At a glance
 
@@ -50,10 +52,13 @@
 
 ## 1. What the app does
 
-- **Your avatar, your clothes.** A seven-question builder (age group, man / woman / rather not say, skin tone, hair, usual style, walk or scooter, how much the cold bothers you) creates an avatar. Styles cover modern and traditional Kathmandu dress: streetwear, smart casual, dresses, kurta-suruwal and kurta-pyjama, daura-suruwal with dhaka topi, and sari.
+![Avatar gallery](assets/avatar_gallery.png)
+
+- **Your avatar, your clothes.** A seven-step builder (age group, man / woman / rather not say, skin tone, hair and spectacles, usual style, walk or scooter, how much the cold bothers you) creates an avatar. Styles cover modern and traditional Kathmandu dress: streetwear, smart casual, dresses, kurta-suruwal and kurta-pyjama, daura-suruwal with dhaka topi, and sari.
 - **Morning and afternoon looks.** Kathmandu's day-night swing is large, so the app shows what to wear at about 8 am and at the afternoon high, e.g. *sweater in the morning, T-shirt by afternoon*.
 - **Options, not orders.** An "Other ideas" row offers three alternatives for the same weather, mostly from your own style plus one crossover. The catalogue includes leather and denim jackets, flannel and linen shirts, kurti with jeans, pashmina, haku patasi, bakhu and gunyu-cholo.
 - **Honest uncertainty.** Tomorrow's high comes with a 10–90% range. When the range straddles a clothing boundary, the advice says "bring a layer" instead of guessing, tuned to appear on about a quarter of days.
+- **Protection decided on the day.** Nobody knows tomorrow's UV or air quality when setting up an avatar, so the builder only asks about spectacles. When a day calls for a cap, sunglasses or a mask (strong sun, polluted air), the avatar wears them and a small "Show on my avatar" row appears right there, with separate switches for the morning and the afternoon, so people choose while looking at that day's conditions. Choices are remembered; the advice chips stay either way.
 - **More than temperature.** The advice also weighs UV (cap, sunglasses, sunscreen, or a chata for shade), wind, humidity ("feels like" and muggy days), air quality (a mask chip when AQI is high, common in Kathmandu's dry season), and an "out late?" note when the evening calls for something warmer. The morning and evening temperatures follow the weather models' hour-by-hour curve, scaled to our corrected low and high.
 - **Scooter mode.** Riders get wind-chill-adjusted advice (about 4 °C colder in the morning), a raincoat instead of an umbrella, and gloves on cold mornings.
 - **Two languages.** English, or Nepali with key words in Devanagari and familiar garment names kept as people say them (बिहान hoodie, दिउँसो T-shirt।).

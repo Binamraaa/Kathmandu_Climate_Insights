@@ -200,12 +200,13 @@ function avatar(o, P){
   else {
     s += `<circle cx="53" cy="39" r="2" fill="${INK}"/><circle cx="67" cy="39" r="2" fill="${INK}"/>`;
     if (fem) s += `<path d="M50 36 L48 34.5 M70 36 L72 34.5" stroke="${INK}" stroke-width="1.2" stroke-linecap="round"/>`;
-    if (P.age === "elder") s += `<circle cx="53" cy="39" r="5.5" stroke="${INK}" stroke-width="1.3" fill="none"/><circle cx="67" cy="39" r="5.5" stroke="${INK}" stroke-width="1.3" fill="none"/><line x1="58.5" y1="39" x2="61.5" y2="39" stroke="${INK}" stroke-width="1.3"/>`;
+    if (wearsGlasses(P)) s += `<circle cx="53" cy="39" r="5.5" stroke="${INK}" stroke-width="1.3" fill="none"/><circle cx="67" cy="39" r="5.5" stroke="${INK}" stroke-width="1.3" fill="none"/><line x1="58.5" y1="39" x2="61.5" y2="39" stroke="${INK}" stroke-width="1.3"/>`;
   }
   if (P.facial === "beard") s += `<path d="M42 40 Q44 58 60 59 Q76 58 78 40 Q74 50 66 50 Q60 46 54 50 Q46 50 42 40 Z" fill="${hairCol}"/>`;
   if (P.facial === "mustache" || P.facial === "beard") s += `<path d="M53 46 Q60 42 67 46 Q60 45 53 46 Z" fill="${hairCol}" stroke="${hairCol}" stroke-width="2"/>`;
-  s += `<path d="M54 48 Q60 52 66 48" stroke="${INK}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
-  if (fem) s += `<path d="M56 49 Q60 51 64 49" stroke="#b5505a" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>`;
+  if (!o.mask) s += `<path d="M54 48 Q60 52 66 48" stroke="${INK}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+  if (o.mask) s += `<path d="M42 40 L49 44 M78 40 L71 44" stroke="#9fb3c8" stroke-width="1.2"/><path d="M48 43 Q60 39 72 43 L71 52 Q60 59 49 52 Z" fill="#e3edf6" stroke="#9fb3c8" stroke-width="1"/><path d="M51 46 H69 M51 49.5 H69" stroke="#9fb3c8" stroke-width=".8"/>`;
+  else if (fem) s += `<path d="M56 49 Q60 51 64 49" stroke="#b5505a" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>`;
 
   // ---- accessories
   if (o.helmet) s += `<path d="M6 160 A13 13 0 0 1 32 160 Z" fill="${C.helmet}" stroke="${INK}" stroke-width="1.3"/><path d="M10 156 H28" stroke="#5d7fa8" stroke-width="3"/>`;
@@ -253,6 +254,18 @@ function shoes(type, G, skin){
     default: return pair(x => `<ellipse cx="${x}" cy="204" rx="10" ry="5" fill="${C.shoe}"/>`);
   }
 }
+// Morning/afternoon protection choices. Defaults: no cap or sunglasses at 8 am,
+// cap + sunglasses in the afternoon, mask whenever the air is poor.
+// Older saved profiles (single cap/sunglasses/mask switches) are carried over.
+function wearPrefs(P){
+  if (P.wear && P.wear.am && P.wear.pm) return P.wear;
+  return {am:{cap:false, mask:P.mask !== false},
+          pm:{cap:P.cap !== false, sunglasses:P.sunglasses !== false, mask:P.mask !== false}};
+}
+
+// prescription glasses: their choice; if never answered, elders default to glasses
+const wearsGlasses = P => P.glasses ?? (P.age === "elder");
+
 function hairBack(style, col, fem){
   switch (style) {
     case "long": return `<path d="M41 30 Q38 70 40 98 H80 Q82 70 79 30 Z" fill="${col}"/>`;
@@ -290,12 +303,25 @@ function looks(d, P){
   const rainA = d.umbrella ? (P.ride ? {raincoat:true} : {umbrella: heavy ? "open" : "closed"}) : {};
   const rainM = d.umbrella ? (P.ride ? {raincoat:true} : {umbrella:"closed"}) : {};
   const aft = {tier:a, t:d.max_temp_c, feel:feelA, time:"Afternoon", rain:heavy && d.umbrella, helmet:P.ride,
-    cap: P.style === "street" && (feelA >= 26 || sunny) && !d.umbrella,
-    sunglasses: (feelA >= 30 || (x.uv_max ?? 0) >= 8) && !d.umbrella, bottle: a === 5, ...rainA};
+    bottle: a === 5, ...rainA};
   const mor = {tier:m, t:morningT, feel:feelM, time:"Morning", gloves:P.ride && feelM < 12, helmet:P.ride, ...rainM};
+  // Protection the weather calls for today. The avatar wears each item unless the person
+  // has switched it off (they decide on the day, when they can see the weather).
+  const need = {cap: (feelA >= 26 || sunny) && !d.umbrella && !wardrobe(P, a).topi,
+                sunglasses: (feelA >= 28 || sunny) && !d.umbrella,
+                mask: (x.aqi_max ?? 0) >= 101};
+  // What the avatar wears is the person's own choice, set separately for the morning
+  // and the afternoon on the main screen (only offered when the day calls for it).
+  const W = wearPrefs(P);
+  mor.cap = need.cap && W.am.cap;
+  mor.mask = need.mask && W.am.mask;
+  aft.cap = need.cap && W.pm.cap;
+  aft.sunglasses = need.sunglasses && W.pm.sunglasses;
+  aft.mask = need.mask && W.pm.mask;
   const L = wardrobe(P, m).label === wardrobe(P, a).label ? [{...aft, time:"All day", tRange:[morningT, d.max_temp_c]}] : [mor, aft];
   // evening: only worth mentioning when it calls for something warmer than the afternoon
   L.evening = e < a ? {tier:e, t:eveningT, feel:feelE} : null;
+  L.need = need;
   return L;
 }
 const labelOf = (o, P) => (o.outfit || wardrobe(P, o.tier)).label;
@@ -391,14 +417,14 @@ const I18N = {
     how:"Temperatures and rain come from a model trained on Kathmandu Airport records that corrects several global weather models. Mornings use the temperature around 8 am, afternoons the day's high; \"feels like\" includes humidity and wind, and riders get extra wind chill. UV, wind and air quality (AQI) come directly from Open-Meteo and CAMS.",
     conf:(m,lo,hi) => `Afternoon high most likely ${m}°; 8 in 10 days like this land between ${lo}° and ${hi}°.`,
     confFar:"Days further out are rougher estimates, usually within about 2° of the actual high.",
-    updated:t => `Updated ${t}; a new forecast arrives every evening.`, data:"Weather data:",
+    updated:t => `Updated ${t}; new forecasts arrive every morning and evening.`, data:"Weather data:",
     dark:"Switch to dark", light:"Switch to light", sample:"Sample data", me:"My avatar", chooseDay:"Choose a day",
     next:"Next", back:"Back", done:"Done", skip:"Skip",
-    q:{age:"Who's heading out?", sex:"Dress them as", skin:"Pick a skin tone", hair:"Hair", style:"What do they usually wear?", ride:"How do they get around?", cold:"In the cold, they…"},
-    facial:"Facial hair", suggested:" (suggested)",
+    q:{extras:"Glasses and protection", age:"Who's heading out?", sex:"Dress them as", skin:"Pick a skin tone", hair:"Hair and glasses", style:"What do they usually wear?", ride:"How do they get around?", cold:"In the cold, they…"},
+    facial:"Facial hair", suggested:" (suggested)", glasses:"Spectacles", onAvatar:"Show on my avatar:", capQ:"Cap", sunQ:"Sunglasses", maskQ:"Mask",
     opt:{kid:"Kid", young:"Teen or young adult", adult:"Adult", elder:"Elder", m:"Man", f:"Woman", n:"Rather not say",
       walk:"Walk or bus", ride:"Scooter or bike", rideSub:"advice adds wind chill", cold0:"Feel it easily", cold1:"About average", cold2:"Rarely feel it",
-      none:"None", mustache:"Mustache", beard:"Beard"},
+      none:"None", mustache:"Mustache", beard:"Beard", yes:"Yes", no:"No"},
     hair:{}, styleName:{}, styleSub:{}, label:{}
   },
   ne: {
@@ -413,14 +439,14 @@ const I18N = {
     how:"Temperature र पानी Kathmandu Airport को record मा train गरिएको model ले global weather model हरू सच्याएर दिन्छ। बिहानका लागि ८ बजेतिरको temperature, दिउँसोका लागि दिनको सबैभन्दा बढी; \"जस्तो लाग्छ\" मा humidity र हावा पनि जोडिन्छ, scooter चलाउनेलाई हावाको चिसो थप। UV, हावा र AQI सिधै Open-Meteo र CAMS बाट।",
     conf:(m,lo,hi) => `दिउँसो धेरैजसो ${m}°; यस्ता 10 दिनमा 8 दिन ${lo}° देखि ${hi}° बीच हुन्छ।`,
     confFar:"टाढाका दिनको forecast अलि अन्दाजी हो, actual भन्दा 2° जति फरक पर्न सक्छ।",
-    updated:t => `Update: ${t}; हरेक साँझ नयाँ forecast आउँछ।`, data:"Weather data:",
+    updated:t => `Update: ${t}; हरेक बिहान र साँझ नयाँ forecast आउँछ।`, data:"Weather data:",
     dark:"Dark mode", light:"Light mode", sample:"Sample data", me:"मेरो avatar", chooseDay:"दिन छान्नुहोस्",
     next:"अर्को", back:"पछाडि", done:"भयो", skip:"पछि गर्छु",
-    q:{age:"कसका लागि?", sex:"केटा कि केटी?", skin:"छालाको रङ", hair:"कपाल", style:"प्रायः के लगाउनुहुन्छ?", ride:"कसरी आउजाउ गर्नुहुन्छ?", cold:"जाडो कत्तिको लाग्छ?"},
-    facial:"जुँगा / दाह्री", suggested:" (सुझाव)",
+    q:{extras:"चस्मा र सुरक्षा", age:"कसका लागि?", sex:"केटा कि केटी?", skin:"छालाको रङ", hair:"कपाल र चस्मा", style:"प्रायः के लगाउनुहुन्छ?", ride:"कसरी आउजाउ गर्नुहुन्छ?", cold:"जाडो कत्तिको लाग्छ?"},
+    facial:"जुँगा / दाह्री", suggested:" (सुझाव)", glasses:"चस्मा", onAvatar:"मेरो avatar मा:", capQ:"Cap", sunQ:"Sunglasses", maskQ:"Mask",
     opt:{kid:"Kid", young:"Teen / youth", adult:"Adult", elder:"Senior", m:"केटा / पुरुष", f:"केटी / महिला", n:"भन्न चाहन्न",
       walk:"हिँडेर / bus मा", ride:"Scooter / bike मा", rideSub:"हावाको चिसो पनि हिसाब गर्छ", cold0:"छिट्टै जाडो लाग्छ", cold1:"Normal", cold2:"खासै जाडो लाग्दैन",
-      none:"छैन", mustache:"जुँगा", beard:"दाह्री"},
+      none:"छैन", mustache:"जुँगा", beard:"दाह्री", yes:"हो", no:"होइन"},
     hair:{short:"छोटो", buzz:"Buzz cut", curly:"Curly", tied:"बाँधेको", long:"लामो", bun:"जुरो", braid:"चुल्ठी", ponytail:"Ponytail", bob:"Bob cut"},
     styleName:{street:"Streetwear", smart:"Smart casual", dress:"Dress", kurta:"कुर्ता", daura:"दौरा-सुरुवाल", sari:"साडी"},
     styleSub:{street:"T-shirt, hoodie, jeans", smart:"Shirt, blazer, pant", dress:"Dress, cardigan", kurta:"कुर्ता-सुरुवाल / पाइजामा", daura:"ढाका टोपीसँग", sari:"जाडोमा shawl सँग"},
@@ -465,7 +491,7 @@ const r = Math.round;
 const lc = s => /^T-shirt/.test(s) ? s : s[0].toLowerCase() + s.slice(1);
 
 /* ===================== Profile ===================== */
-const DEFAULT = {age:"adult", sex:"m", skin:2, hair:"short", facial:"none", style:"smart", ride:false, cold:1};
+const DEFAULT = {age:"adult", sex:"m", skin:2, hair:"short", facial:"none", style:"smart", ride:false, cold:1, glasses:null, cap:true, sunglasses:true, mask:true};
 function normalise(p){
   p = {...DEFAULT, ...p};
   if (p.style === "everyday") p.style = defaultStyle(p.age, p.sex);            // profiles saved by older versions
@@ -507,7 +533,8 @@ function chips(d, L){
   else if (!d.umbrella && (x.uv_max ?? 0) >= 6) out.push(`<span class="chip">${ICON.dry}${t.uvHigh} <span class="sub">UV ${r(x.uv_max)}</span></span>`);
   if ((x.gust_max ?? 0) >= 35) out.push(`<span class="chip">${ICON.wind}${t.windy} <span class="sub">${r(x.gust_max)} km/h</span></span>`);
   if ((x.rh_mean ?? 0) >= 75 && d.max_temp_c >= 26) out.push(`<span class="chip">${ICON.water}${t.muggy}</span>`);
-  if (L.evening) out.push(`<span class="chip">${ICON.moon}${t.evening(lc(tLabel(wardrobe(P, L.evening.tier).label)))}</span>`);
+  const eveLabel = L.evening ? wardrobe(P, L.evening.tier).label : null;
+  if (eveLabel && eveLabel !== labelOf(L[L.length - 1], P)) out.push(`<span class="chip">${ICON.moon}${t.evening(lc(tLabel(wardrobe(P, L.evening.tier).label)))}</span>`);
   if (L.some(o => o.gloves)) out.push(`<span class="chip">${ICON.gloves}${t.gloves}</span>`);
   if (d.layer && d.max_temp_c < 25) out.push(`<span class="chip">${ICON.layer}${t.layer}</span>`);
   if (L.some(o => o.bottle)) out.push(`<span class="chip">${ICON.water}${t.water}</span>`);
@@ -545,6 +572,7 @@ function render(i){
   }).join("");
   drawIdeas(L);
   document.getElementById("chips").innerHTML = chips(d, L);
+  drawWear(L);
   document.querySelectorAll(".day").forEach((b, j) => b.setAttribute("aria-pressed", j === i));
   document.getElementById("conf").textContent = d.max_range_c
     ? T().conf(r(d.max_temp_c), r(d.max_range_c[0]), r(d.max_range_c[1])) : T().confFar;
@@ -565,9 +593,32 @@ function drawIdeas(L){
     render(SEL);
   };
 }
+function drawWear(L){
+  // One small set of switches per look, listing only the protection today's weather
+  // calls for. Morning and afternoon are separate; choices are remembered.
+  const need = L.need || {}, box = document.getElementById("wear"), t = T();
+  const label = {cap:t.capQ, sunglasses:t.sunQ, mask:t.maskQ};
+  const slots = L.length === 2
+    ? [["am", t.morning, ["cap", "mask"]], ["pm", t.afternoon, ["cap", "sunglasses", "mask"]]]
+    : [["pm", t.allDay, ["cap", "sunglasses", "mask"]]];
+  const W = wearPrefs(P);
+  const cells = slots.map(([slot, name, keys]) => {
+    const ks = keys.filter(k => need[k]);
+    return ks.length ? `<div class="wear-cell"><span>${name}</span>` + ks.map(k =>
+      `<button class="wear" type="button" data-slot="${slot}" data-k="${k}" aria-pressed="${!!W[slot][k]}">${label[k]}</button>`).join("") + `</div>` : `<div class="wear-cell"></div>`;
+  });
+  box.className = "wear-row" + (L.length === 2 ? " two" : "");
+  box.innerHTML = slots.some(([, , keys]) => keys.some(k => need[k])) ? `<p>${t.onAvatar}</p>` + cells.join("") : "";
+  box.onclick = e => {
+    const b = e.target.closest(".wear"); if (!b) return;
+    const w = JSON.parse(JSON.stringify(wearPrefs(P)));
+    w[b.dataset.slot][b.dataset.k] = !w[b.dataset.slot][b.dataset.k];
+    P.wear = w; saveProfile(); render(SEL);
+  };
+}
 function meButton(){
   // tiny head-and-shoulders crop of the user's avatar
-  const svg = avatar({tier:3, time:"You"}, {...P, age: P.age === "kid" ? "adult" : P.age}).replace(/viewBox="[^"]+"/, 'viewBox="30 6 60 60"');
+  const svg = avatar({tier:4, time:"You"}, {...P, age: P.age === "kid" ? "adult" : P.age}).replace(/viewBox="[^"]+"/, 'viewBox="30 6 60 60"');
   document.getElementById("me").innerHTML = svg + T().me;
 }
 function drawDays(){
@@ -617,7 +668,8 @@ const STEPS = [
   {q:"sex", groups: () => [{key:"sex", opts:["m","f","n"].map(k => [k, O(k)])}]},
   {q:"skin", swatches:true},
   {q:"hair", groups: d => [{key:"hair", opts:HAIRS[d.sex].map(([v, en]) => [v, T().hair[v] || en])}].concat(d.sex === "m" && d.age !== "kid"
-      ? [{key:"facial", label:T().facial, opts:["none","mustache","beard"].map(k => [k, O(k)])}] : [])},
+      ? [{key:"facial", label:T().facial, opts:["none","mustache","beard"].map(k => [k, O(k)])}] : [])
+      .concat([{key:"glasses", label:T().glasses, opts:[[true, O("yes")], [false, O("no")]], value:wearsGlasses(d)}])},
   {q:"style", groups: d => [{key:"style", opts:stylesFor(d.sex).map(k => [k, T().styleName[k] || STYLE_NAMES[k],
       (T().styleSub[k] || STYLE_SUB[k]) + (k === defaultStyle(d.age, d.sex) ? T().suggested : "")])}]},
   {q:"ride", groups: () => [{key:"ride", opts:[[false, O("walk")], [true, O("ride"), O("rideSub")]]}]},
@@ -635,18 +687,24 @@ function drawStep(){
   const S = STEPS[step], d = FC ? FC.days[SEL] : SAMPLE.days[0];
   draft = normalise(draft);
   document.getElementById("dots").innerHTML = STEPS.map((_, i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("");
-  const L = looks(d, draft);
-  document.getElementById("preview").innerHTML = avatar(L[L.length - 1], draft);
+  // Neutral portrait while building: a fixed mild-weather outfit with no weather
+  // accessories, so answers (e.g. how cold they feel) don't make things flicker.
+  // Cap, sunglasses and mask are decided on the day, on the main screen.
+  const portrait = {tier:4, time:"You", helmet:draft.ride};
+  document.getElementById("preview").innerHTML = avatar(portrait, draft);
   document.getElementById("q").textContent = T().q[S.q];
   const A = document.getElementById("answers");
   A.innerHTML = S.swatches
     ? `<div class="swatches">${SKINS.map((c, i) => `<button class="sw" type="button" data-k="skin" data-v="${i}" style="background:${c}" aria-label="Skin tone ${i + 1}" aria-pressed="${draft.skin === i}"></button>`).join("")}</div>`
-    : S.groups(draft).map(g => (g.label ? `<p class="glabel">${g.label}</p>` : "") +
-        `<div class="opts">${g.opts.map(([v, t, sub]) => `<button class="opt" type="button" data-k="${g.key}" data-v='${JSON.stringify(v)}' aria-pressed="${draft[g.key] === v}">${t}${sub ? `<small>${sub}</small>` : ""}</button>`).join("")}</div>`).join("");
+    : S.groups(draft).map(g => (g.label ? `<p class="glabel">${g.label}</p>` : "") + (g.toggles
+        ? `<div class="opts">${g.opts.map(([k, t]) => `<button class="opt" type="button" data-toggle="${k}" aria-pressed="${!!draft[k]}">${t}</button>`).join("")}</div>`
+        : `<div class="opts">${g.opts.map(([v, t, sub]) => `<button class="opt" type="button" data-k="${g.key}" data-v='${JSON.stringify(v)}' aria-pressed="${(g.value !== undefined ? g.value : draft[g.key]) === v}">${t}${sub ? `<small>${sub}</small>` : ""}</button>`).join("")}</div>`)).join("");
   document.getElementById("back").style.visibility = step ? "visible" : "hidden";
   document.getElementById("next").textContent = step === STEPS.length - 1 ? T().done : T().next;
 }
 document.getElementById("answers").addEventListener("click", e => {
+  const tg = e.target.closest("[data-toggle]");
+  if (tg) { draft[tg.dataset.toggle] = !draft[tg.dataset.toggle]; drawStep(); return; }
   const b = e.target.closest("[data-v]"); if (!b) return;
   const k = b.dataset.k, v = JSON.parse(b.dataset.v);
   draft[k] = v;
