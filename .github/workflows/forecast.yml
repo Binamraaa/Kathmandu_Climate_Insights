@@ -2,11 +2,22 @@ name: Daily forecast
 
 on:
   schedule:
-    - cron: "30 12 * * *"   # 12:30 UTC = 18:15 Nepal time
-  workflow_dispatch:          # lets you run it by hand from the Actions tab
+    - cron: "40 23 * * *"   # 23:40 UTC = 05:25 Nepal time: morning run, forecasts TODAY
+    - cron: "47 11 * * *"   # 11:47 UTC = 17:32 Nepal time: evening run, forecasts TOMORROW
+  workflow_dispatch:          # run by hand from the Actions tab
+    inputs:
+      mode:
+        description: "auto follows the Nepal clock (morning before 12:00)"
+        type: choice
+        options: [auto, morning, evening]
+        default: auto
 
 permissions:
   contents: write
+
+concurrency:
+  group: forecast
+  cancel-in-progress: false
 
 jobs:
   forecast:
@@ -19,11 +30,20 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-app.txt
       - run: pip install -r requirements-app.txt
-      - run: python -m src.export_forecast
+      - name: Forecast
+        run: |
+          if [ "${{ inputs.mode }}" = "morning" ] || [ "${{ inputs.mode }}" = "evening" ]; then
+            python -m src.export_forecast --mode "${{ inputs.mode }}"
+          else
+            python -m src.export_forecast
+          fi
       - name: Commit the new forecast
         run: |
-          git config user.name "forecast-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # A neutral author that isn't linked to any GitHub account, so automated
+          # forecast commits don't show up as a "contributor".
+          git config user.name "K Laune forecast"
+          git config user.email "forecast@k-laune.invalid"
           git add docs/forecast.json data/verification/forecast_log.csv
-          git diff --staged --quiet || git commit -m "Forecast for $(date -u +%F)"
+          git diff --staged --quiet || git commit -m "Forecast $(TZ=Asia/Kathmandu date '+%F %H:%M') NPT"
+          git pull --rebase origin main
           git push
