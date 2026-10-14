@@ -18,7 +18,7 @@
 | **Data** | DHM daily record 1999–2024, NOAA GSOD to 2025, day-ahead forecasts from 6 global weather models |
 | **Live model** | MOS v2.1: XGBoost quantile models correcting global weather models with station history |
 | **Accuracy (tomorrow)** | Max 1.09 °C, Min 0.81 °C mean error; 80% forecast ranges that hold; rain flag catches 85% of wet days |
-| **App** | One HTML file on GitHub Pages; avatar builder, outfit ideas, English / Nepali, scooter mode |
+| **App** | Installable PWA on GitHub Pages (works offline); avatar builder, outfit ideas, English / Nepali, scooter mode |
 | **Automation** | GitHub Action forecasts twice a day (05:25 for today, 17:32 for tomorrow, Nepal time) and logs each forecast for verification |
 
 ---
@@ -62,7 +62,7 @@
 - **More than temperature.** The advice also weighs UV (cap, sunglasses, sunscreen, or a chata for shade), wind, humidity ("feels like" and muggy days), air quality (a mask chip when AQI is high, common in Kathmandu's dry season), and an "out late?" note when the evening calls for something warmer. The morning and evening temperatures follow the weather models' hour-by-hour curve, scaled to our corrected low and high.
 - **Scooter mode.** Riders get wind-chill-adjusted advice (about 4 °C colder in the morning), a raincoat instead of an umbrella, and gloves on cold mornings.
 - **Two languages.** English, or Nepali with key words in Devanagari and familiar garment names kept as people say them (बिहान hoodie, दिउँसो T-shirt।).
-- **Light and private.** One HTML file, no framework, no tracking. Your avatar is stored only in your own browser.
+- **Installable, light and private.** A Progressive Web App: add it to your home screen and it opens like an app, and works offline with the last forecast it saw. No framework, no tracking; your avatar is stored only in your own browser.
 
 ## 2. How it works
 
