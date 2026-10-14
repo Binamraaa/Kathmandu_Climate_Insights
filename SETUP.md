@@ -108,7 +108,10 @@ The second line runs it straight away as a test; check `export_log.txt` afterwar
 
 ## 5. The app (K Laune)
 
-`docs/index.html` is a single file: no build step. It reads `docs/forecast.json` (shows "Sample data" without it).
+`docs/` is a small Progressive Web App with no build step: `index.html`, `style.css`, `app.js` (avatar engine, translations and app logic), `manifest.webmanifest`, `sw.js` (service worker) and `icons/`. It reads `docs/forecast.json` (shows "Sample data" without it).
+
+- **Installable:** on a phone, "Add to Home Screen" (iPhone, Safari share menu) or "Install app" (Android / Chrome menu) puts it on the home screen; it opens full screen like an app.
+- **Offline:** the service worker is network first for everything, so updates show as soon as you're online; with no connection it falls back to the last copy it saw, including the last forecast. When changing the cached file list in `sw.js`, bump `CACHE`.
 
 - **First visit:** a 7-step avatar builder (age, man / woman / rather not say, skin tone, hair and spectacles, usual style, walk or scooter, how much the cold bothers them). Cap, sunglasses and mask are chosen on the main screen on days that call for them. "My avatar" in the header reopens it.
 - **Main view:** morning and afternoon avatars in the recommended outfits, a one-line headline, rain chip (umbrella, or raincoat for riders), and the next two days.

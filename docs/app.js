@@ -733,3 +733,8 @@ document.getElementById("lang").addEventListener("click", () => {
   if (FC) { drawDays(); render(SEL); }
   if (sheet.classList.contains("open")) drawStep();
 });
+
+/* Installable app (PWA): offline support with the last forecast seen. */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
