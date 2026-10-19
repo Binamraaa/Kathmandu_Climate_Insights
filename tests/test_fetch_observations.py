@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.fetch_observations import assign_days, check, parse_page, parse_value, plan_updates
+from src.fetch_observations import assign_days, check, is_recent, parse_page, parse_value, plan_updates
 
 FIXTURE = Path(__file__).parent / "fixtures" / "ashesh_weather.html"
 
@@ -49,6 +49,13 @@ class DateRuleTest(unittest.TestCase):
     def test_min_today_max_rain_yesterday(self):
         days = assign_days(date(2026, 10, 15), {"max": 27.5, "min": 13.5, "rain_mm": 0.0})
         self.assertEqual(days, {"2026-10-14": {"max": 27.5, "rain_mm": 0.0}, "2026-10-15": {"min": 13.5}})
+
+    def test_bulletin_age(self):
+        today = date(2026, 10, 19)
+        self.assertTrue(is_recent(date(2026, 10, 19), today))
+        self.assertTrue(is_recent(date(2026, 10, 18), today))
+        self.assertFalse(is_recent(date(2026, 10, 17), today))
+        self.assertFalse(is_recent(date(2026, 10, 20), today))
 
     def test_missing_values_are_skipped(self):
         days = assign_days(date(2026, 10, 15), {"max": 27.5, "min": None, "rain_mm": None})

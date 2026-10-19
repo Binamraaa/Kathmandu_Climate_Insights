@@ -29,6 +29,9 @@ STATION = "Kathmandu"
 COLUMNS = {"unit": "max", "rate_buying": "min", "rate_selling": "rain_mm"}
 TRACE_MM = 0.1
 MISSING = {"", "-", "--"}
+# Accept yesterday's bulletin too: the 05:25 run comes before the day's bulletin, and a
+# delayed evening run can land after midnight. Days come from the bulletin date, not the clock.
+MAX_AGE_DAYS = 1
 
 
 class _StationParser(HTMLParser):
@@ -97,6 +100,11 @@ def parse_page(html: str, station: str = STATION) -> tuple[date, dict]:
     return date.fromisoformat(m.group(1)), vals
 
 
+def is_recent(bulletin: date, today: date) -> bool:
+    """True if the bulletin is today's or at most MAX_AGE_DAYS old (and not from the future)."""
+    return 0 <= (today - bulletin).days <= MAX_AGE_DAYS
+
+
 def check(vals: dict) -> list[str]:
     """Sanity problems with the parsed values (empty list = fine)."""
     probs = []
@@ -151,8 +159,8 @@ def main():
 
     bulletin, vals = parse_page(fetch())
     today = datetime.now(NPT).date()
-    if bulletin != today:
-        print(f"Page shows the {bulletin} bulletin, not today's ({today} Nepal time). Nothing saved; try later.")
+    if not is_recent(bulletin, today):
+        print(f"Page shows the {bulletin} bulletin, too old for today ({today} Nepal time). Nothing saved.")
         return
     show = lambda v: "–" if v is None else v
     print(f"MFD bulletin {bulletin}, {STATION}: max {show(vals['max'])}, min {show(vals['min'])}, rain {show(vals['rain_mm'])} mm")

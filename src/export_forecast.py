@@ -10,6 +10,7 @@ can show "today" in the daytime and "tomorrow" in the evening.
 
     python -m src.export_forecast                 # mode from the clock
     python -m src.export_forecast --mode morning  # force a mode
+    python -m src.export_forecast --skip-if-done  # backup crons: no-op if this run already happened today
     python -m src.export_forecast --replay 2025-03-15   # offline test, not logged
 """
 import argparse
@@ -40,6 +41,25 @@ def merge_with_previous(fc: dict, today: pd.Timestamp, prev: dict | None) -> dic
     return fc
 
 
+def already_done(prev: dict | None, mode: str, now: datetime) -> bool:
+    """True if the existing file already holds today's run of this mode."""
+    if not prev or prev.get("mode") != mode:
+        return False
+    try:
+        return datetime.fromisoformat(prev["generated_at"]).astimezone(NPT).date() == now.date()
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def read_previous() -> dict | None:
+    if not OUT.exists():
+        return None
+    try:
+        return json.loads(OUT.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def build(daily: pd.DataFrame, mode: str, now: datetime, temp, rain, mos, live: bool) -> dict:
     today = pd.Timestamp(now.date())
     daily = daily[daily.index < today] if mode == "morning" else daily[daily.index <= today]
@@ -55,7 +75,14 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mode", choices=["morning", "evening"], help="default: morning before 12:00 Nepal time, else evening")
     ap.add_argument("--replay", help="YYYY-MM-DD: build from recorded data instead of live data (not logged)")
+    ap.add_argument("--skip-if-done", action="store_true", help="do nothing if today's run of this mode is already in the file")
     args = ap.parse_args()
+    if args.skip_if_done and not args.replay:
+        now = datetime.now(NPT)
+        mode = args.mode or ("morning" if now.hour < 12 else "evening")
+        if already_done(read_previous(), mode, now):
+            print(f"Today's {mode} forecast is already in {OUT.name}; nothing to do.")
+            return
     temp, rain, mos = load_temp_models("champion_v2"), load_rain_models("rain_v1"), load_mos_v2()
 
     if args.replay:
@@ -81,13 +108,7 @@ def main():
             fc = attach(fc, fetch_extras())
         except Exception as e:  # noqa: BLE001 — extras refine the advice; the forecast stands without them
             print(f"  (UV / wind / air-quality extras unavailable: {e})")
-        prev = None
-        if OUT.exists():
-            try:
-                prev = json.loads(OUT.read_text(encoding="utf-8"))
-            except Exception:  # noqa: BLE001
-                prev = None
-        fc = merge_with_previous(fc, pd.Timestamp(now.date()), prev)
+        fc = merge_with_previous(fc, pd.Timestamp(now.date()), read_previous())
 
     fc["location"] = "Kathmandu (Tribhuvan Airport)"
     OUT.parent.mkdir(exist_ok=True)

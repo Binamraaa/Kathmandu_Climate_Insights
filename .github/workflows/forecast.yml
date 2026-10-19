@@ -2,9 +2,16 @@ name: Daily forecast
 
 on:
   schedule:
+    # GitHub delays scheduled runs by hours and sometimes drops them (the 16 Oct 2026
+    # morning run never fired), so each run has backups. Scheduled runs pass
+    # --skip-if-done: the first one to land does the work, the rest exit quietly.
     - cron: "40 23 * * *"   # 23:40 UTC = 05:25 Nepal time: morning run, forecasts TODAY
-    - cron: "47 11 * * *"   # 11:47 UTC = 17:32 Nepal time: evening run, forecasts TOMORROW
-  workflow_dispatch:          # run by hand from the Actions tab
+    - cron: "10 1 * * *"    # 01:10 UTC = 06:55 Nepal time: morning backup
+    - cron: "40 2 * * *"    # 02:40 UTC = 08:25 Nepal time: morning backup
+    - cron: "47 9 * * *"    # 09:47 UTC = 15:32 Nepal time: evening run, forecasts TOMORROW
+    - cron: "47 10 * * *"   # 10:47 UTC = 16:32 Nepal time: evening backup
+    - cron: "47 11 * * *"   # 11:47 UTC = 17:32 Nepal time: evening backup
+  workflow_dispatch:          # run by hand from the Actions tab (always runs)
     inputs:
       mode:
         description: "auto follows the Nepal clock (morning before 12:00)"
@@ -34,16 +41,32 @@ jobs:
         run: |
           if [ "${{ inputs.mode }}" = "morning" ] || [ "${{ inputs.mode }}" = "evening" ]; then
             python -m src.export_forecast --mode "${{ inputs.mode }}"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            python -m src.export_forecast --skip-if-done
           else
             python -m src.export_forecast
           fi
+      - name: Observations (MFD bulletin)
+        # Saves only values not recorded yet; a site outage must not block the forecast.
+        continue-on-error: true
+        run: python -m src.fetch_observations
       - name: Commit the new forecast
         run: |
           # A neutral author that isn't linked to any GitHub account, so automated
           # forecast commits don't show up as a "contributor".
           git config user.name "K Laune forecast"
           git config user.email "forecast@k-laune.invalid"
-          git add docs/forecast.json data/verification/forecast_log.csv
-          git diff --staged --quiet || git commit -m "Forecast $(TZ=Asia/Kathmandu date '+%F %H:%M') NPT"
+          git add docs/forecast.json data/verification/forecast_log.csv data/verification/observations.csv
+          if git diff --staged --quiet; then
+            echo "Nothing new to commit."
+            exit 0
+          fi
+          parts=()
+          git diff --staged --quiet -- docs/forecast.json || parts+=("Forecast")
+          git diff --staged --quiet -- data/verification/observations.csv || parts+=("observations")
+          [ ${#parts[@]} -gt 0 ] || parts=("Forecast")
+          msg="${parts[*]}"
+          msg="${msg// / + }"
+          git commit -m "${msg^} $(TZ=Asia/Kathmandu date '+%F %H:%M') NPT"
           git pull --rebase origin main
           git push
