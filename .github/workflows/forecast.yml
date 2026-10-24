@@ -46,10 +46,11 @@ jobs:
           else
             python -m src.export_forecast
           fi
-      - name: Observations (MFD bulletin)
-        # Saves only values not recorded yet; a site outage must not block the forecast.
-        continue-on-error: true
-        run: python -m src.fetch_observations
+      - name: Observations (station SYNOP)
+        # Saves only values not recorded yet (last 10 days, so missed runs catch up).
+        # An outage must not block the forecast, but it shows as a warning on the run page.
+        run: |
+          python -m src.fetch_observations || echo "::warning title=Observations::fetch_observations failed, see this step's log"
       - name: Commit the new forecast
         run: |
           # A neutral author that isn't linked to any GitHub account, so automated

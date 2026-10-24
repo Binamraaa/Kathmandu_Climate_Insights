@@ -18,9 +18,9 @@ python -m src.predict --replay 2023-07-15       # offline sanity check (≈29.5 
 python -m src.export_forecast                    # live forecast → docs/forecast.json (+ verification log)
 python -m src.export_forecast --mode morning     # force mode (default follows the Nepal clock)
 python -m http.server 8000 -d docs               # app at http://localhost:8000
-python -m src.fetch_observations --dry-run       # today's MFD bulletin (the Action saves it automatically)
+python -m src.fetch_observations --dry-run       # last 10 days of station SYNOPs (the Action saves them automatically)
 python -m src.verify add 2026-10-14 --min 14.9   # observations (fields can be added in separate steps)
-python -m unittest tests.test_fetch_observations # bulletin parser tests
+python -m unittest tests.test_fetch_observations # SYNOP decoder tests
 python -m src.verify report                      # accuracy scorecard
 python -m src.train_mos_v2 --prune               # retrain the live model (MOS v2.1)
 node --check docs/app.js                         # quick JS syntax check
@@ -39,8 +39,8 @@ node --check docs/app.js                         # quick JS syntax check
 - `src/live_input.py`, `src/nwp_hourly.py`: Open-Meteo access (Forecast, Previous Runs `_previous_day1`, historical-forecast, archive APIs).
 - `src/features.py`, `src/mos_features.py`: shared feature code. Training and live prediction must use the same functions.
 - `src/verify.py`: forecast log + observations + scorecard. Tags each row `run` = morning/evening.
-- `src/fetch_observations.py`: reads the MFD bulletin from ashesh.com.np/weather (today's or yesterday's), applies the date rule, never overwrites recorded values without `--force`.
-- `.github/workflows/forecast.yml`: morning crons at 05:25, 06:55, 08:25 NPT and evening crons at 15:32, 16:32, 17:32 NPT. Scheduled runs pass `--skip-if-done`, so the first to land does the work and the backups exit quietly; manual dispatch (with a mode input) always runs. Every run then tries `fetch_observations` (non-fatal). Commits as "K Laune forecast" (neutral author, so no bot shows up as a contributor) with "Forecast" / "Observations" / "Forecast + observations" messages, then `git pull --rebase` + push.
+- `src/fetch_observations.py`: decodes the station's own SYNOP reports (WMO 44454) from OGIMET for the last 10 days, so missed runs catch up; never overwrites recorded values without `--force`; warns about recent gaps.
+- `.github/workflows/forecast.yml`: morning crons at 05:25, 06:55, 08:25 NPT and evening crons at 15:32, 16:32, 17:32 NPT. Scheduled runs pass `--skip-if-done`, so the first to land does the work and the backups exit quietly; manual dispatch (with a mode input) always runs. Every run then tries `fetch_observations` (non-fatal, but failures and gaps show as warnings on the run page). Commits as "K Laune forecast" (neutral author, so no bot shows up as a contributor) with "Forecast" / "Observations" / "Forecast + observations" messages, then `git pull --rebase` + push.
 
 **App** (`docs/`, served by GitHub Pages from `/docs`, no build step)
 - `index.html`, `style.css`, `app.js` (avatar engine + translations + app logic in one file). PWA files: `manifest.webmanifest`, `sw.js` (network-first service worker), `icons/` (192, 512, 512 maskable, 180 apple-touch).
@@ -58,12 +58,12 @@ node --check docs/app.js                         # quick JS syntax check
 - **Always write text files with `encoding="utf-8"`.** Windows defaults to cp1252 and once broke `forecast.json`.
 - **Save models as XGBoost JSON** via `model_io`, never pickle/joblib ("input stream corrupted" history).
 - **`docs/forecast.json` and `data/verification/forecast_log.csv` belong to the bot.** Don't commit laptop runs of `export_forecast`; discard with `git checkout -- docs/forecast.json data/verification/forecast_log.csv`.
-- **`data/verification/observations.csv` is shared:** the bot adds bulletin values, people add the rest by hand. `git pull` before `verify add`, so hand edits don't conflict with the bot's rows.
+- **`data/verification/observations.csv` is shared:** the bot adds station (SYNOP) values, people add the rest by hand. `git pull` before `verify add`, so hand edits don't conflict with the bot's rows.
 - **Git routine: commit, then pull, then push.** The bot commits twice a day. Global config `pull.rebase=true`, `rebase.autoStash=true` is set. On conflicts in bot files, keep GitHub's version (`git checkout --ours …` during a rebase).
 - **GitHub cron delays can be hours** (an evening run once landed at 00:16 NPT), and runs can be dropped (16 Oct 2026 morning). The clock-based mode handles correctness; backup crons + `--skip-if-done` handle coverage.
 - **Never train MOS on Open-Meteo's historical-forecast archive.** It's stitched from near-0-hour forecasts (look-ahead leak). Use the Previous Runs API (`_previous_day1`, from Jan 2024).
 - **Service worker is network-first.** If you change caching, keep it that way to avoid stale versions on phones; bump `CACHE` in `sw.js` when changing the cached file list.
-- **MFD observation dates:** a morning bulletin's *min* belongs to that day; its *max* and *rain* (24 h to 08:45) belong to the previous day. Record min for D from D's bulletin, max and rain from D+1's. Source: dhm.gov.np/mfd (JS app) or the ashesh.com.np/weather listing.
+- **Observation dates:** min of D = 03 UTC (08:45 NPT) SYNOP of D; max of D = 12 UTC (17:45 NPT) SYNOP of D; rain of D = 24 h to 08:45 on D+1 (03 UTC SYNOP of D+1, whole mm above 1 mm). By hand, from the MFD bulletin (dhm.gov.np/mfd): same rule. **Don't use ashesh.com.np:** Cloudflare returns 403 to GitHub runners, its page goes stale for days, and its header date is a day off, which put mins on the wrong day.
 - **NOAA GSOD** (station 444540) extends the DHM record (bias-adjusted monthly) but lags by months.
 - **Keep Open-Meteo attribution (CC BY 4.0)** visible in the app and README.
 - **Avatars never infer ethnicity or religion.** Users choose skin tone, hair and clothing; no religious markers.
@@ -77,8 +77,8 @@ node --check docs/app.js                         # quick JS syntax check
 
 ## Open items
 
-- Observation gaps: 15 Oct max/rain and 16–17 Oct (no archive of those bulletins); fill from NOAA GSOD when it updates.
+- Observation gaps: 21–23 Oct 2026 (the station sent no SYNOPs, probably Dashain). Fill from the MFD bulletin or NOAA GSOD.
 - `verify report`: the "Days" column counts days with any observation; make it per metric.
-- Daily: check the bot recorded the MFD observations (add by hand if the site was down). After ~30 verified days: consider a rolling bias correction; publish results in the README.
+- Daily: glance at the run page for observation warnings (add by hand from MFD if a gap persists). After ~30 verified days: consider a rolling bias correction; publish results in the README.
 - Retrain MOS every ~3 months (or when GSOD updates): `fetch_gsod`, then `train_mos_v2 --prune`; compare with Max 1.09 / Min 0.81 / rain 0.117 before trusting it.
 - Roadmap ideas: comfort feedback ("too cold / just right / too warm"), neighbourhood elevation adjustment (~0.6 °C per 100 m), more valley stations.

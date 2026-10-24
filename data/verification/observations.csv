@@ -1,6 +1,13 @@
 date,max,min,rain_mm,note
-2026-10-13,27.6,14.5,0.0,MFD 13 Oct; MFD 14 Oct
-2026-10-14,27.5,14.9,0.0,MFD 14 Oct; MFD 15 Oct (saved page)
-2026-10-15,,13.5,,MFD 15 Oct (saved page)
-2026-10-18,25.0,,0.0,auto: MFD via ashesh.com.np 2026-10-19
-2026-10-19,,13.5,,auto: MFD via ashesh.com.np 2026-10-19
+2026-10-12,,,0.0,auto: SYNOP 44454 via OGIMET
+2026-10-13,27.6,14.9,0.0,MFD 13 Oct; MFD 14 Oct; auto: SYNOP 44454 via OGIMET
+2026-10-14,27.5,14.5,0.0,MFD 14 Oct; MFD 15 Oct (saved page); auto: SYNOP 44454 via OGIMET
+2026-10-15,26.6,13.5,0.0,MFD 15 Oct (saved page); auto: SYNOP 44454 via OGIMET
+2026-10-16,25.8,15.0,0.0,auto: SYNOP 44454 via OGIMET
+2026-10-17,26.4,13.8,0.0,auto: SYNOP 44454 via OGIMET
+2026-10-18,25.0,13.5,0.0,auto: MFD via ashesh.com.np 2026-10-19; auto: SYNOP 44454 via OGIMET
+2026-10-19,25.8,14.0,0.0,auto: MFD via ashesh.com.np 2026-10-19; auto: SYNOP 44454 via OGIMET
+2026-10-20,25.2,14.0,0.0,auto: SYNOP 44454 via OGIMET
+2026-10-21,,14.0,,auto: SYNOP 44454 via OGIMET
+2026-10-23,,,0.0,auto: SYNOP 44454 via OGIMET
+2026-10-24,,14.7,,auto: SYNOP 44454 via OGIMET
