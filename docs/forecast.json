@@ -52,7 +52,7 @@
         14.2
       ],
       "run": "evening",
-      "updated_at": "2026-10-24T15:59+05:45",
+      "updated_at": "2026-10-24T16:12+05:45",
       "extras": {
         "uv_max": 6.5,
         "gust_max": 22.0,
@@ -76,7 +76,7 @@
       "outfit": "Hot (25–30°C)",
       "layer": false,
       "run": "evening",
-      "updated_at": "2026-10-24T15:59+05:45",
+      "updated_at": "2026-10-24T16:12+05:45",
       "extras": {
         "uv_max": 6.5,
         "gust_max": 22.0,
@@ -100,7 +100,7 @@
       "outfit": "Hot (25–30°C)",
       "layer": false,
       "run": "evening",
-      "updated_at": "2026-10-24T15:59+05:45",
+      "updated_at": "2026-10-24T16:12+05:45",
       "extras": {
         "uv_max": 6.45,
         "gust_max": 18.4,
@@ -115,7 +115,7 @@
     }
   ],
   "mode": "evening",
-  "generated_at": "2026-10-24T15:59+05:45",
+  "generated_at": "2026-10-24T16:12+05:45",
   "input_source": "Open-Meteo (bias-corrected)",
   "location": "Kathmandu (Tribhuvan Airport)"
 }
