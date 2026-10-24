@@ -18,6 +18,7 @@ Which report gives what (times UTC, Nepal = UTC+5:45):
 """
 import argparse
 import os
+import sys
 from datetime import date, datetime, timedelta, timezone
 
 import pandas as pd
@@ -166,6 +167,7 @@ def warn(msg: str):
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows consoles default to cp1252 and choke on → or °C
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true", help="print what would be saved, save nothing")
     ap.add_argument("--force", action="store_true", help="overwrite values that are already recorded")

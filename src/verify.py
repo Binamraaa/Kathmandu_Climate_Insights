@@ -12,6 +12,7 @@ Then see the scorecard:
     python -m src.verify report
 """
 import argparse
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -155,6 +156,7 @@ def report():
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows consoles default to cp1252 and choke on → or °C
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("add", help="record what actually happened on a day")
