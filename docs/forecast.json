@@ -2,120 +2,88 @@
   "issued_for": "2026-11-08",
   "days": [
     {
-      "date": "2026-11-08",
-      "horizon": 1,
-      "model": "MOS v2.1 (pruned) (6 weather models)",
-      "max_temp_c": 24.1,
-      "min_temp_c": 11.4,
-      "rain_prob": 0.04,
-      "umbrella": false,
-      "outfit": "Warm (20–25°C)",
-      "layer": false,
-      "max_range_c": [
-        22.1,
-        25.8
-      ],
-      "min_range_c": [
-        9.4,
-        12.5
-      ],
-      "run": "morning",
-      "updated_at": "2026-11-08T08:26+05:45",
-      "extras": {
-        "uv_max": 5.85,
-        "gust_max": 21.6,
-        "rh_mean": 80,
-        "feels_max_adj": 1.1,
-        "feels_min_adj": -0.6,
-        "morning_frac": 0.64,
-        "evening_frac": 0.42,
-        "aqi_max": 122,
-        "pm25_max": 57.9
-      }
-    },
-    {
       "date": "2026-11-09",
       "horizon": 1,
       "model": "MOS v2.1 (pruned) (6 weather models)",
-      "max_temp_c": 24.7,
-      "min_temp_c": 11.1,
+      "max_temp_c": 24.6,
+      "min_temp_c": 11.3,
       "rain_prob": 0.02,
       "umbrella": false,
       "outfit": "Warm (20–25°C), bring a layer for hot",
       "layer": true,
       "max_range_c": [
-        23.1,
-        26.0
+        22.9,
+        26.1
       ],
       "min_range_c": [
-        9.4,
-        12.4
+        9.3,
+        12.6
       ],
-      "run": "evening",
-      "updated_at": "2026-11-08T12:58+05:45",
+      "run": "morning",
+      "updated_at": "2026-11-09T08:42+05:45",
       "extras": {
         "uv_max": 5.75,
-        "gust_max": 26.3,
-        "rh_mean": 60,
-        "feels_max_adj": -1.3,
-        "feels_min_adj": -0.6,
+        "gust_max": 22.7,
+        "rh_mean": 58,
+        "feels_max_adj": -1.4,
+        "feels_min_adj": -0.7,
         "morning_frac": 0.51,
-        "evening_frac": 0.3,
-        "aqi_max": 109,
-        "pm25_max": 54.0
+        "evening_frac": 0.27,
+        "aqi_max": 87,
+        "pm25_max": 48.8
       }
     },
     {
       "date": "2026-11-10",
       "horizon": 2,
       "model": "Champion v2 / Rain v1",
-      "max_temp_c": 23.9,
-      "min_temp_c": 10.5,
+      "max_temp_c": 24.1,
+      "min_temp_c": 10.4,
       "rain_prob": 0.03,
       "umbrella": false,
       "outfit": "Warm (20–25°C)",
       "layer": false,
-      "run": "evening",
-      "updated_at": "2026-11-08T12:58+05:45",
+      "run": "morning",
+      "updated_at": "2026-11-09T08:42+05:45",
       "extras": {
-        "uv_max": 5.75,
+        "uv_max": 5.7,
         "gust_max": 15.5,
-        "rh_mean": 56,
-        "feels_max_adj": -0.9,
-        "feels_min_adj": -1.8,
-        "morning_frac": 0.49,
-        "evening_frac": 0.13,
-        "aqi_max": 95,
-        "pm25_max": 54.7
+        "rh_mean": 54,
+        "feels_max_adj": -0.6,
+        "feels_min_adj": -1.7,
+        "morning_frac": 0.53,
+        "evening_frac": 0.3,
+        "aqi_max": 93,
+        "pm25_max": 54.6
       }
     },
     {
       "date": "2026-11-11",
       "horizon": 3,
       "model": "Champion v2 / Rain v1",
-      "max_temp_c": 23.9,
+      "max_temp_c": 24.0,
       "min_temp_c": 10.1,
       "rain_prob": 0.04,
       "umbrella": false,
       "outfit": "Warm (20–25°C)",
       "layer": false,
-      "run": "evening",
-      "updated_at": "2026-11-08T12:58+05:45",
+      "run": "morning",
+      "updated_at": "2026-11-09T08:42+05:45",
       "extras": {
         "uv_max": 5.55,
-        "gust_max": 29.2,
-        "rh_mean": 56,
-        "feels_max_adj": -0.9,
-        "feels_min_adj": 0.4,
-        "morning_frac": 0.62,
-        "evening_frac": 0.34,
-        "aqi_max": 108,
-        "pm25_max": 67.8
+        "gust_max": 27.0,
+        "rh_mean": 61,
+        "feels_max_adj": -0.6,
+        "feels_min_adj": -0.3,
+        "morning_frac": 0.63,
+        "evening_frac": 0.22,
+        "aqi_max": 109,
+        "pm25_max": 63.8
       }
     }
   ],
-  "mode": "evening",
-  "generated_at": "2026-11-08T12:58+05:45",
+  "mode": "morning",
+  "generated_at": "2026-11-09T08:42+05:45",
   "input_source": "Open-Meteo (bias-corrected)",
   "location": "Kathmandu (Tribhuvan Airport)"
 }
