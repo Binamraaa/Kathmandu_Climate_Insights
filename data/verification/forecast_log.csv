@@ -342,11 +342,17 @@ issued,target,horizon,source,max,min,max_lo,max_hi,rain_prob,umbrella,live,run
 2026-11-10,2026-11-12,2,Champion v2 / Rain v1,24.5,10.8,,,0.03,False,True,morning
 2026-11-09,2026-11-12,3,Champion v2 / Rain v1,24.4,10.3,,,0.05,False,True,evening
 2026-11-09,2026-11-12,3,Champion v2 / Rain v1,24.3,10.3,,,0.05,False,True,morning
+2026-11-11,2026-11-12,1,MOS v2.1 (pruned) (6 weather models),22.5,10.4,20.3,24.1,0.03,False,True,evening
+2026-11-11,2026-11-12,1,Open-Meteo raw (reference),19.2,10.5,,,0.0,False,True,evening
 2026-11-10,2026-11-12,2,Open-Meteo raw (reference),18.7,10.0,,,0.04,False,True,evening
 2026-11-10,2026-11-12,2,Open-Meteo raw (reference),19.0,10.5,,,0.0,False,True,morning
 2026-11-09,2026-11-12,3,Open-Meteo raw (reference),19.7,10.5,,,0.18,False,True,evening
 2026-11-09,2026-11-12,3,Open-Meteo raw (reference),19.2,9.7,,,0.12,False,True,morning
+2026-11-11,2026-11-13,2,Champion v2 / Rain v1,23.2,9.9,,,0.05,False,True,evening
 2026-11-10,2026-11-13,3,Champion v2 / Rain v1,24.0,10.1,,,0.04,False,True,evening
 2026-11-10,2026-11-13,3,Champion v2 / Rain v1,24.0,10.1,,,0.04,False,True,morning
+2026-11-11,2026-11-13,2,Open-Meteo raw (reference),20.6,9.1,,,0.06,False,True,evening
 2026-11-10,2026-11-13,3,Open-Meteo raw (reference),20.3,9.3,,,0.24,False,True,evening
 2026-11-10,2026-11-13,3,Open-Meteo raw (reference),20.1,9.1,,,0.12,False,True,morning
+2026-11-11,2026-11-14,3,Champion v2 / Rain v1,23.1,9.4,,,0.05,False,True,evening
+2026-11-11,2026-11-14,3,Open-Meteo raw (reference),20.2,12.1,,,0.25,False,True,evening
