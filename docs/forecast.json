@@ -2,91 +2,59 @@
   "issued_for": "2026-11-12",
   "days": [
     {
-      "date": "2026-11-12",
-      "horizon": 1,
-      "model": "MOS v2.1 (pruned) (6 weather models)",
-      "max_temp_c": 22.5,
-      "min_temp_c": 10.2,
-      "rain_prob": 0.03,
-      "umbrella": false,
-      "outfit": "Warm (20–25°C)",
-      "layer": false,
-      "max_range_c": [
-        20.2,
-        24.1
-      ],
-      "min_range_c": [
-        8.9,
-        11.8
-      ],
-      "run": "morning",
-      "updated_at": "2026-11-12T00:38+05:45",
-      "extras": {
-        "uv_max": 5.5,
-        "gust_max": 22.7,
-        "rh_mean": 71,
-        "feels_max_adj": -1.1,
-        "feels_min_adj": -0.9,
-        "morning_frac": 0.53,
-        "evening_frac": 0.37,
-        "aqi_max": 112,
-        "pm25_max": 64.7
-      }
-    },
-    {
       "date": "2026-11-13",
       "horizon": 1,
       "model": "MOS v2.1 (pruned) (6 weather models)",
-      "max_temp_c": 22.5,
+      "max_temp_c": 22.7,
       "min_temp_c": 9.6,
       "rain_prob": 0.04,
       "umbrella": false,
       "outfit": "Warm (20–25°C)",
       "layer": false,
       "max_range_c": [
-        20.6,
+        21.1,
         23.7
       ],
       "min_range_c": [
         7.9,
-        11.1
+        10.8
       ],
-      "run": "evening",
-      "updated_at": "2026-11-12T13:58+05:45",
+      "run": "morning",
+      "updated_at": "2026-11-13T00:22+05:45",
       "extras": {
-        "uv_max": 5.1,
-        "gust_max": 23.0,
-        "rh_mean": 80,
-        "feels_max_adj": -0.3,
+        "uv_max": 4.8,
+        "gust_max": 23.4,
+        "rh_mean": 79,
+        "feels_max_adj": -0.2,
         "feels_min_adj": -1.2,
         "morning_frac": 0.6,
-        "evening_frac": 0.56,
-        "aqi_max": 158,
-        "pm25_max": 95.9
+        "evening_frac": 0.55,
+        "aqi_max": 159,
+        "pm25_max": 98.7
       }
     },
     {
       "date": "2026-11-14",
       "horizon": 2,
       "model": "Champion v2 / Rain v1",
-      "max_temp_c": 22.4,
+      "max_temp_c": 22.5,
       "min_temp_c": 9.3,
       "rain_prob": 0.04,
       "umbrella": false,
       "outfit": "Warm (20–25°C)",
       "layer": false,
-      "run": "evening",
-      "updated_at": "2026-11-12T13:58+05:45",
+      "run": "morning",
+      "updated_at": "2026-11-13T00:22+05:45",
       "extras": {
         "uv_max": 5.55,
-        "gust_max": 21.6,
+        "gust_max": 20.5,
         "rh_mean": 82,
         "feels_max_adj": 0.1,
-        "feels_min_adj": -0.5,
-        "morning_frac": 0.55,
-        "evening_frac": 0.48,
-        "aqi_max": 168,
-        "pm25_max": 111.3
+        "feels_min_adj": -0.8,
+        "morning_frac": 0.61,
+        "evening_frac": 0.54,
+        "aqi_max": 171,
+        "pm25_max": 132.2
       }
     },
     {
@@ -99,23 +67,23 @@
       "umbrella": false,
       "outfit": "Warm (20–25°C)",
       "layer": false,
-      "run": "evening",
-      "updated_at": "2026-11-12T13:58+05:45",
+      "run": "morning",
+      "updated_at": "2026-11-13T00:22+05:45",
       "extras": {
-        "uv_max": 5.45,
-        "gust_max": 29.2,
+        "uv_max": 5.35,
+        "gust_max": 29.5,
         "rh_mean": 84,
-        "feels_max_adj": -0.3,
-        "feels_min_adj": -0.3,
-        "morning_frac": 0.54,
-        "evening_frac": 0.41,
-        "aqi_max": 177,
-        "pm25_max": 117.6
+        "feels_max_adj": -0.2,
+        "feels_min_adj": -0.6,
+        "morning_frac": 0.48,
+        "evening_frac": 0.33,
+        "aqi_max": 183,
+        "pm25_max": 118.3
       }
     }
   ],
-  "mode": "evening",
-  "generated_at": "2026-11-12T13:58+05:45",
+  "mode": "morning",
+  "generated_at": "2026-11-13T00:22+05:45",
   "input_source": "Open-Meteo (bias-corrected)",
   "location": "Kathmandu (Tribhuvan Airport)"
 }
