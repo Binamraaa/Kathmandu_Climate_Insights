@@ -7,16 +7,15 @@ the advice (sun protection, wind, mugginess, mask, evening layer).
 """
 import numpy as np
 import pandas as pd
-import requests
 
-from src.live_input import FORECAST_URL, KTM_AIRPORT, TZ
+from src.live_input import FORECAST_URL, HTTP, KTM_AIRPORT, TZ
 
 AQ_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 MORNING_HOUR, EVENING_HOUR = 8, 19
 
 
 def _get(url, **params):
-    r = requests.get(url, params={**params, "timezone": TZ}, timeout=30)
+    r = HTTP.get(url, params={**params, "timezone": TZ}, timeout=30)
     r.raise_for_status()
     return r.json()
 

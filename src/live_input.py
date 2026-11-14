@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 # Tribhuvan International Airport (DHM Kathmandu Airport station)
 KTM_AIRPORT = {"latitude": 27.6966, "longitude": 85.3591, "elevation": 1338}
@@ -19,12 +21,28 @@ FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 HISTORICAL_FORECAST_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
+
+def _retrying_session() -> requests.Session:
+    """Open-Meteo occasionally stalls for >30 s (two Action runs failed on a single
+    ReadTimeout in Nov 2026). Retry timeouts, connection errors and 429/5xx with
+    backoff (5, 10, 20 s) before giving up. 4xx answers are returned as-is."""
+    retry = Retry(total=3, connect=3, read=3, status=3, backoff_factor=5,
+                  status_forcelist=(429, 500, 502, 503, 504), allowed_methods=("GET",),
+                  raise_on_status=False, respect_retry_after_header=True)
+    s = requests.Session()
+    s.mount("https://", HTTPAdapter(max_retries=retry))
+    return s
+
+
+# Shared by every Open-Meteo request (live_input, extras, nwp_hourly, verify).
+HTTP = _retrying_session()
+
 CALIBRATION_PATH = Path(__file__).resolve().parents[1] / "models" / "openmeteo_calibration.json"
 
 
 def _get(url: str, **params) -> pd.DataFrame:
     params = {**KTM_AIRPORT, "daily": DAILY, "timezone": TZ, **params}
-    r = requests.get(url, params=params, timeout=30)
+    r = HTTP.get(url, params=params, timeout=30)
     r.raise_for_status()
     d = r.json()["daily"]
     df = pd.DataFrame(
@@ -55,7 +73,7 @@ def fetch_nwp_full(model: str, url: str = HISTORICAL_FORECAST_URL, **params) -> 
     variables if the extra ones aren't available for that model."""
     base = {**KTM_AIRPORT, "timezone": TZ, "models": model, **params}
     for daily in (DAILY + "," + EXTRA_DAILY, DAILY):
-        r = requests.get(url, params={**base, "daily": daily}, timeout=60)
+        r = HTTP.get(url, params={**base, "daily": daily}, timeout=60)
         if r.ok:
             d = r.json()["daily"]
             df = pd.DataFrame({NWP_RENAME[k]: v for k, v in d.items() if k in NWP_RENAME},

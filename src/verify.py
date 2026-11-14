@@ -31,9 +31,9 @@ BAND_EDGES = [10, 15, 20, 25, 30]
 # ------------------------------------------------------------------ logging
 def fetch_reference(days: int = 4) -> pd.DataFrame | None:
     """Raw Open-Meteo forecast for the airport: what a typical weather app shows."""
-    from src.live_input import FORECAST_URL, KTM_AIRPORT, TZ
+    from src.live_input import FORECAST_URL, HTTP, KTM_AIRPORT, TZ
     try:
-        r = requests.get(FORECAST_URL, timeout=30, params={**KTM_AIRPORT, "timezone": TZ, "forecast_days": days,
+        r = HTTP.get(FORECAST_URL, timeout=30, params={**KTM_AIRPORT, "timezone": TZ, "forecast_days": days,
                          "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max"})
         r.raise_for_status()
         d = r.json()["daily"]

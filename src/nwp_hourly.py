@@ -8,7 +8,7 @@ Forecast API. Both are aggregated to identical daily features.
 import pandas as pd
 import requests
 
-from src.live_input import FORECAST_URL, KTM_AIRPORT, TZ
+from src.live_input import FORECAST_URL, HTTP, KTM_AIRPORT, TZ
 
 PREV_RUNS_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
 BASE_VARS = ["temperature_2m", "precipitation", "cloud_cover", "relative_humidity_2m", "wind_speed_10m", "pressure_msl"]
@@ -16,7 +16,7 @@ CORE_VARS = ["temperature_2m", "precipitation"]
 
 
 def _request(url: str, variables: list[str], **params) -> pd.DataFrame:
-    r = requests.get(url, params={**KTM_AIRPORT, "timezone": TZ, "hourly": ",".join(variables), **params}, timeout=90)
+    r = HTTP.get(url, params={**KTM_AIRPORT, "timezone": TZ, "hourly": ",".join(variables), **params}, timeout=90)
     r.raise_for_status()
     h = r.json()["hourly"]
     df = pd.DataFrame({k: v for k, v in h.items() if k != "time"}, index=pd.to_datetime(h["time"]))
