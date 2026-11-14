@@ -89,7 +89,10 @@ def add_observation(day: str, tmax: float | None, tmin: float | None, rain_mm: f
             row[k] = v
     if note:
         prev = row.get("note")
-        row["note"] = note if (pd.isna(prev) or not prev) else f"{prev}; {note}"
+        parts = [] if (pd.isna(prev) or not prev) else str(prev).split("; ")
+        if note not in parts:  # the bot saves fields in separate runs; don't repeat its note
+            parts.append(note)
+        row["note"] = "; ".join(parts)
     obs = pd.concat([obs[obs["date"] != day], pd.DataFrame([row])]).sort_values("date")
     obs.to_csv(OBS, index=False)
     show = lambda v, u="": "–" if v is None or pd.isna(v) else f"{v}{u}"
