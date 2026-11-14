@@ -6,7 +6,8 @@ Live app: https://binamraaa.github.io/Kathmandu_Climate_Insights/
 
 ## Environment
 
-- Windows + Anaconda, env `ktm-climate`, Python 3.12. Repo folder: `C:\Users\ALiEN\Kathmandu_climate_history`.
+- Windows + Miniconda (`C:\Users\ALiEN\miniconda3`), env `ktm-climate`, Python 3.12. Repo folder: `C:\Users\ALiEN\dev\Kathmandu_Climate_Insights`.
+- conda isn't on PATH outside the Anaconda Prompt; call the env directly: `C:\Users\ALiEN\miniconda3\envs\ktm-climate\python.exe -m src.<module>`.
 - Run everything from the repo root as modules: `python -m src.<module>`.
 - `xgboost==3.4.1` is pinned. Other versions load the JSON models but shift predictions; `model_io` warns.
 - Full install: `requirements.txt`. The GitHub Action uses the lighter `requirements-app.txt`.
