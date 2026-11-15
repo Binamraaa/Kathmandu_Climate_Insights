@@ -5,12 +5,15 @@ on:
     # GitHub delays scheduled runs by hours and sometimes drops them (the 16 Oct 2026
     # morning run never fired), so each run has backups. Scheduled runs pass
     # --skip-if-done: the first one to land does the work, the rest exit quietly.
-    - cron: "40 23 * * *"   # 23:40 UTC = 05:25 Nepal time: morning run, forecasts TODAY
-    - cron: "10 1 * * *"    # 01:10 UTC = 06:55 Nepal time: morning backup
-    - cron: "40 2 * * *"    # 02:40 UTC = 08:25 Nepal time: morning backup
-    - cron: "47 9 * * *"    # 09:47 UTC = 15:32 Nepal time: evening run, forecasts TOMORROW
-    - cron: "47 10 * * *"   # 10:47 UTC = 16:32 Nepal time: evening backup
-    - cron: "47 11 * * *"   # 11:47 UTC = 17:32 Nepal time: evening backup
+    # In Nov 2026 runs started 3-7 h late every day, so the crons are set well ahead
+    # of when the forecast is needed. The mode follows the Nepal clock at run time
+    # (morning before 12:00), so a run that lands late still does the right thing.
+    - cron: "17 20 * * *"   # 20:17 UTC = 02:02 Nepal time: morning run, forecasts TODAY
+    - cron: "17 21 * * *"   # 21:17 UTC = 03:02 Nepal time: morning backup
+    - cron: "17 22 * * *"   # 22:17 UTC = 04:02 Nepal time: morning backup
+    - cron: "32 6 * * *"    # 06:32 UTC = 12:17 Nepal time: evening run, forecasts TOMORROW
+    - cron: "32 7 * * *"    # 07:32 UTC = 13:17 Nepal time: evening backup
+    - cron: "32 8 * * *"    # 08:32 UTC = 14:17 Nepal time: evening backup
   workflow_dispatch:          # run by hand from the Actions tab (always runs)
     inputs:
       mode:
@@ -38,14 +41,24 @@ jobs:
           cache-dependency-path: requirements-app.txt
       - run: pip install -r requirements-app.txt
       - name: Forecast
+        # Open-Meteo sometimes doesn't answer a runner for minutes (15 Nov 2026: every
+        # in-process retry timed out over ~2.5 min). Retry the whole export a few
+        # minutes apart before failing, since GitHub may not fire a backup cron for hours.
         run: |
           if [ "${{ inputs.mode }}" = "morning" ] || [ "${{ inputs.mode }}" = "evening" ]; then
-            python -m src.export_forecast --mode "${{ inputs.mode }}"
+            args=(--mode "${{ inputs.mode }}")
           elif [ "${{ github.event_name }}" = "schedule" ]; then
-            python -m src.export_forecast --skip-if-done
+            args=(--skip-if-done)
           else
-            python -m src.export_forecast
+            args=()
           fi
+          for attempt in 1 2 3; do
+            python -m src.export_forecast "${args[@]}" && exit 0
+            [ "$attempt" -lt 3 ] || break
+            echo "::warning title=Forecast::attempt $attempt failed, retrying in 4 minutes"
+            sleep 240
+          done
+          exit 1
       - name: Observations (station SYNOP)
         # Saves only values not recorded yet (last 10 days, so missed runs catch up).
         # An outage must not block the forecast, but it shows as a warning on the run page.
